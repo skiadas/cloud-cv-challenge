@@ -65,3 +65,5 @@
   - `steps` for the job
     - `uses` other actions
     - `run` scripts
+    - `env` sets environment variables
+
