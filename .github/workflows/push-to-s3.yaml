@@ -10,7 +10,7 @@ jobs:
       - uses: actions/checkout@v3
       - uses: aws-actions/configure-aws-credentials@v1
         with:
-          role-to-assume: ${{ secrets.AWS_ROLE }}
+          role-to-assume: arn:aws:iam::410438835476:role/github-actions-skiadas-resume
           role-duration-seconds: 900
           aws-region: us-east-1
       - run: aws s3 sync ./site s3://skiadas-resume
