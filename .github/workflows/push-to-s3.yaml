@@ -13,4 +13,4 @@ jobs:
           role-to-assume: ${{ secrets.AWS_ROLE }}
           role-duration-seconds: 900
           aws-region: us-east-1
-      - run: aws s3 sync ./site s3://skiadas-resume
+      - run: aws s3 sync --delete ./site s3://skiadas-resume
