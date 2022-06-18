@@ -4,7 +4,7 @@ on:
     paths:
       - 'site/**'
       - 'cloudFormation'
-  workflow-dispatch:
+  workflow_dispatch:
 
 permissions:
   id-token: write # required to use OIDC authentication
