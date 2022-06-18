@@ -1,9 +1,11 @@
 name: push-to-s3
 on:
- push:
-  paths:
-    - 'site/**'
-    - 'cloudFormation'
+  push:
+    paths:
+      - 'site/**'
+      - 'cloudFormation'
+  workflow-dispatch:
+
 permissions:
   id-token: write # required to use OIDC authentication
   contents: read # required to checkout the code from the repo
