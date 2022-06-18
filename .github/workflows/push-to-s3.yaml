@@ -1,8 +1,4 @@
 name: push-to-s3
-on:
- push:
-  paths:
-    - 'site/**'
 permissions:
   id-token: write # required to use OIDC authentication
   contents: read # required to checkout the code from the repo
@@ -16,4 +12,10 @@ jobs:
           role-to-assume: ${{ secrets.AWS_ROLE }}
           role-duration-seconds: 900
           aws-region: us-east-1
-      - run: aws s3 sync --delete ./site s3://skiadas-resume
+      - uses: aws-actions/aws-cloudformation-github-deploy@v1
+        with:
+          name: skiadas-resume-stack
+          template: ./cloudFormation/main.yaml
+          parameter-overrides: "SubDomain=${{ secrets.SUBDOMAIN }},DomainName=${{ secrets.DOMAIN }},HostedZoneId=${{ secrets.HOSTED_ZONE_ID}},BucketName=${{ secrets.BUCKET_NAME}}"
+      - run: aws s3 sync --delete ./site s3://${{ secrets.BUCKET_NAME }}
+

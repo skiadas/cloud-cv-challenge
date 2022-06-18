@@ -1,0 +1,121 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Based on: ACFS3 - S3 Static site with CF and ACM
+
+# This sets up the way these parameters will show up on the console
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label:
+          default: Domain
+        Parameters:
+          - SubDomain
+          - DomainName
+          - HostedZoneId
+    ParameterGroups:
+      - Label:
+          default: Buckets
+        Parameters:
+          - BucketName
+
+# Dictionary that can be referenced using Fn:FindInMap
+# Eg:  !FindInMap [Solution, Constants, Version]
+Mappings:
+  Solution:
+    Constants:
+      Version: 'v0.8'
+
+# Forces deployment only in us-east-1
+Rules:
+  OnlyUsEast1:
+    Assertions:
+      - Assert:
+          Fn::Equals:
+            - !Ref AWS::Region
+            - us-east-1
+        AssertDescription: |
+          This template can only be deployed in the us-east-1 region.
+          This is because the ACM Certificate must be created in us-east-1
+
+Parameters:
+  SubDomain:
+    Description: The part of a website address before your DomainName - e.g. www or img
+    Type: String
+    Default: www
+    AllowedPattern: ^[^.]*$
+  DomainName:
+    Description: The part of a website address after your SubDomain - e.g. example.com
+    Type: String
+  HostedZoneId:
+    Description: HostedZoneId for the domain e.g. Z23ABC4XYZL05B
+    Type: String
+  BucketName:
+    Description: The name of the bucket for the website
+    Type: String
+
+# The resources to be used in the stack
+# references other files
+Resources:
+  BucketStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: ./buckets.yaml
+      Parameters:
+        BucketName: !Ref BucketName
+      Tags:
+        - Key: project
+          Value: resume-skiadas
+
+  # Create certificate
+  AcmCertificateStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: ./acm-certificate.yaml
+      Parameters:
+        SubDomain: !Ref SubDomain
+        DomainName: !Ref DomainName
+        HostedZoneId: !Ref HostedZoneId
+      Tags:
+        - Key: project
+          Value: resume-skiadas
+
+  CloudFrontStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: ./cloudfront-site.yaml
+      Parameters:
+        CertificateArn: !GetAtt AcmCertificateStack.Outputs.CertificateArn
+        DomainName: !Ref DomainName
+        SubDomain: !Ref SubDomain
+        S3BucketRoot: !GetAtt BucketStack.Outputs.S3BucketRoot
+        S3BucketRootName: !GetAtt BucketStack.Outputs.S3BucketRootName
+        S3BucketRootArn: !GetAtt BucketStack.Outputs.S3BucketRootArn
+        S3BucketLogs: !GetAtt BucketStack.Outputs.S3BucketLogs
+        S3BucketLogsName: !GetAtt BucketStack.Outputs.S3BucketLogsName
+      Tags:
+        - Key: project
+          Value: resume-skiadas
+
+Outputs:
+  SolutionVersion:
+    Value: !FindInMap [Solution, Constants, Version]
+  S3BucketLogs:
+    Description: Logging bucket
+    Value: !GetAtt BucketStack.Outputs.S3BucketLogs
+  S3BucketRoot:
+    Description: Website bucket
+    Value: !GetAtt BucketStack.Outputs.S3BucketRoot
+  S3BucketLogsName:
+    Description: Logging bucket name
+    Value: !GetAtt BucketStack.Outputs.S3BucketLogsName
+  S3BucketRootName:
+    Description: Website bucket name
+    Value: !GetAtt BucketStack.Outputs.S3BucketRootName
+  CertificateArn:
+    Description: Issued certificate
+    Value: !GetAtt AcmCertificateStack.Outputs.CertificateArn
+  CFDistributionName:
+    Description: CloudFront distribution
+    Value: !GetAtt CloudFrontStack.Outputs.CloudFrontDistribution
+  CloudFrontDomainName:
+    Description: Website address
+    Value: !GetAtt CloudFrontStack.Outputs.CloudFrontDomainName
