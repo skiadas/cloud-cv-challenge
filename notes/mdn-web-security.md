@@ -1,0 +1,46 @@
+# Mozilla Web Security Guidelines
+
+From [this page](https://infosec.mozilla.org/guidelines/web_security)
+
+- Strict Transport Security. Forces use of HTTPS, and upgrading HTTP to HTTPS
+- HTTP requests should be 301 redirected to HTTPS  (or 302 if different path)
+- Only for high risk websites, use [public key pinning](https://noncombatant.org/2015/05/01/about-http-public-key-pinning/) but it requires a lot of care, you can self-DOS. This is aimed to prevent misissued certificates. It instructs browsers to expect the server to always present one of a set of public keys.
+- Resources should also be loaded over HTTPS.
+- Content Security Policy. Disables inline javascript (so all javascript must be loaded via `script src` tags). Prevents XSS attacks.
+  - Can be done via meta tag too but must be the first meta in head
+  - `default-src https:` is great first goal
+  - `default-src 'none'; img-src 'self'; script-src 'self'; style-src 'self'`
+  - this disables `data:` URIs.
+  - `object-src 'none'` to disable Flash/Silverlight etc
+  - `Content-Security-Policy-Report-Only` header can give warnings prior to implementation
+- `contribute.json` recommended
+- All cookies should be created such that their access is as limited as possible.
+  - `__Secure-` or `__Host-` prefixes to prevent cookies from being overwritten by insecure sources
+  - Must set `Secure` flag
+  - `HttpOnly` flag if not needed by Javascript
+  - Should expire as soon as is necessary. Either `Expires:` or `Max-age:`
+  - `Domain:` only use if need to be accessible on other domains
+  - `Path:` set to most restrictive path possible
+  - `SameSite:`
+- CORS
+  - `Access-Control-Allow-Origin` header. Use only for CDNs
+- CSRF
+  - Unauthorized commands transmitted from a trusted user
+  - Anti-CSRF tokens prevent CSRF attacks by requiring the existence of a secret, unique, and unpredictable token on all destructive changes.
+  - These tokens can be set for an entire user session, rotated on a regular basis, or be created uniquely for each request.
+  - [Cheat sheet](https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html)
+- Referrer policy: prevent your site for being included in requests (e.g. images)
+  - Relevant headers `Referer` (typoed), `Referrer-policy` (no typo)
+  - options:
+    - no-referrer: never send the Referer header
+    - same-origin: send referrer, but only on requests to the same origin
+    - strict-origin: send referrer to all origins, but only the URL without the path (e.g. https://example.com/)
+    - strict-origin-when-cross-origin: send full referrer on same origin, URL without the path on foreign origin
+  - also meta tag
+- `robots.txt` can instruct robots what paths to (not) index
+  - This is particularly useful for reducing load on your website through disabling the crawling of automatically generated content. It can also be helpful for preventing the pollution of search results, for resources that don’t benefit from being searchable.
+- Subresource integrity locks an external JavaScript resource to its known contents at a specific point in time.
+- `X-Content-Type-Options` header can be set to prevent "sniffing" of non-scripts as scripts
+- `X-Frame-Options` controls how our site can be used within an iframe. prevents "[click-jacking](https://owasp.org/www-community/attacks/Clickjacking)"
+  - This is in addition to CSP `frame-ancestors`
+- `X-XSS-Protection`
