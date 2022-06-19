@@ -13,7 +13,7 @@ Things I will need to achieve with my cloudformation template:
 - upload to bucket
 - ??
 
-I will also need to modify my github actions to carry out the cloudformation templte work.
+I will also need to modify my github actions to carry out the cloudformation template work.
 
 It needs some parameters, I'll need to figure out where to place them: subdomain (`resume` for me), domain name, hosted zone id.
 
@@ -21,4 +21,4 @@ I started copying and understanding the templates. One thing I notice is that it
 
 One uncertainty related to that would be how my github workflow knows the name of the bucket. I'll probably need to specify it in both places, via a GitHub environment variable perhaps. I also need to make sure the cloudformation templates are being acted on first. I will probably need to put them in the same workflow somehow.
 
-
+In order to automatically push the stack I first tried to use a github action provided by AWS. Unfortunately that action can only handle a single template and not its dependencies. I therefore had to follow the directions to first "package" the stack to an S3 bucket and then deploy using that packaging.
