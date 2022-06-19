@@ -24,9 +24,11 @@ jobs:
         uses: scottbrenner/cfn-lint-action@v2
       - name: Print the Cloud Formation Linter Version & run Linter.
         run: |
-          setopt -s globstar # enable globbing
           cfn-lint --version
-          cfn-lint -t ./cloudFormation/*.yml
+          cfn-lint -t ./cloudFormation/main.yaml
+          cfn-lint -t ./cloudFormation/acm-certificate.yaml
+          cfn-lint -t ./cloudFormation/buckets.yaml
+          cfn-lint -t ./cloudFormation/cloudfront-site.yaml
       - uses: aws-actions/configure-aws-credentials@v1
         with:
           role-to-assume: ${{ env.ROLE }}
