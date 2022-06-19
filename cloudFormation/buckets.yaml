@@ -15,7 +15,7 @@ Resources:
 
   S3BucketLogs:
     Type: AWS::S3::Bucket
-    Name: !Sub '${BucketName}-logs'
+    BucketName: !Sub '${BucketName}-logs'
     DeletionPolicy: Retain
     Properties:
       AccessControl: LogDeliveryWrite
@@ -29,7 +29,7 @@ Resources:
 
   S3BucketRoot:
     Type: AWS::S3::Bucket
-    Name: !Ref BucketName
+    BucketName: !Ref BucketName
     DeletionPolicy: Retain
     Properties:
       BucketEncryption:
