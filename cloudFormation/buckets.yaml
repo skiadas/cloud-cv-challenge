@@ -1,4 +1,4 @@
-AWSTemplateFormatVersion: '2010-09-09'
+AWSTemplateFormatVersion: "2010-09-09"
 Description: Builds the buckets needed
 # This is a macro that processes this file
 # This specific platform treats this file as SAM and converts to CloudFormation
@@ -6,18 +6,16 @@ Description: Builds the buckets needed
 Transform: AWS::Serverless-2016-10-31
 
 Parameters:
-
   BucketName:
     Description: The name of the bucket for the website
     Type: String
 
 Resources:
-
   S3BucketLogs:
     Type: AWS::S3::Bucket
-    BucketName: !Sub '${BucketName}-logs'
     DeletionPolicy: Retain
     Properties:
+      BucketName: !Sub "${BucketName}-logs"
       AccessControl: LogDeliveryWrite
       BucketEncryption:
         ServerSideEncryptionConfiguration:
@@ -29,15 +27,15 @@ Resources:
 
   S3BucketRoot:
     Type: AWS::S3::Bucket
-    BucketName: !Ref BucketName
     DeletionPolicy: Retain
     Properties:
+      BucketName: !Ref BucketName
       BucketEncryption:
         ServerSideEncryptionConfiguration:
           - ServerSideEncryptionByDefault:
               SSEAlgorithm: AES256
       LoggingConfiguration:
-        DestinationBucketName: !Ref 'S3BucketLogs'
+        DestinationBucketName: !Ref "S3BucketLogs"
       Tags:
         - Key: project
           Value: resume-skiadas
