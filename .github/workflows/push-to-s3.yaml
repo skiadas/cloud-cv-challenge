@@ -12,17 +12,20 @@ permissions:
 jobs:
   pull-then-push:
     runs-on: ubuntu-latest
+    env:
+      ROLE: ${{ secrets.AWS_ROLE }}
+      BUCKET: ${{ secrets.BUCKET_NAME }}
+      SUBDOMAIN: ${{ secrets.SUBDOMAIN }}
+      DOMAIN_NAME: ${{ secrets.DOMAIN }}
+      ZONE_ID: ${{ secrets.HOSTED_ZONE_ID}}
     steps:
       - uses: actions/checkout@v3
       - uses: aws-actions/configure-aws-credentials@v1
         with:
-          role-to-assume: ${{ secrets.AWS_ROLE }}
+          role-to-assume: ${{ env.ROLE }}
           role-duration-seconds: 900
           aws-region: us-east-1
-      - uses: aws-actions/aws-cloudformation-github-deploy@v1
-        with:
-          name: skiadas-resume-stack
-          template: ./cloudFormation/main.yaml
-          parameter-overrides: "SubDomain=${{ secrets.SUBDOMAIN }},DomainName=${{ secrets.DOMAIN }},HostedZoneId=${{ secrets.HOSTED_ZONE_ID}},BucketName=${{ secrets.BUCKET_NAME}}"
-      - run: aws s3 sync --delete ./site s3://${{ secrets.BUCKET_NAME }}
+      - run: aws cloudformation package --template-file ./cloudFormation/main.yaml --s3-bucket skiadas-resume-templates --output-template-file packaged.template
+      - run: aws cloudformation deploy --stack-name skiadas-resume-stack --templateFile packaged.template --capabilities CAPABILITY_NAMED_IAM CAPABILITY_AUTO_EXPAND --parameter-overrides SubDomain=$SUBDOMAIN DomainName=$DOMAIN_NAME HostedZoneId=ZONE_ID BucketName=$BUCKET
+      - run: aws s3 sync --delete ./site s3://$BUCKET
 
