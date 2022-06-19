@@ -20,6 +20,12 @@ jobs:
       ZONE_ID: ${{ secrets.HOSTED_ZONE_ID}}
     steps:
       - uses: actions/checkout@v3
+      - name: Setup Cloud Formation Linter with Latest Version
+        uses: scottbrenner/cfn-lint-action@v2
+      - name: Print the Cloud Formation Linter Version & run Linter.
+        run: |
+          cfn-lint --version
+          cfn-lint -t ./template.yml
       - uses: aws-actions/configure-aws-credentials@v1
         with:
           role-to-assume: ${{ env.ROLE }}
@@ -36,6 +42,7 @@ jobs:
           --s3-bucket skiadas-resume-templates
           --template-file packaged.template
           --capabilities CAPABILITY_NAMED_IAM CAPABILITY_AUTO_EXPAND
+          --disable-rollback
           --parameter-overrides SubDomain=$SUBDOMAIN DomainName=$DOMAIN_NAME
           HostedZoneId=ZONE_ID BucketName=$BUCKET
       - run: aws s3 sync --delete ./site s3://$BUCKET

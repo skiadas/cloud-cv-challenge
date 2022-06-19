@@ -22,3 +22,7 @@ I started copying and understanding the templates. One thing I notice is that it
 One uncertainty related to that would be how my github workflow knows the name of the bucket. I'll probably need to specify it in both places, via a GitHub environment variable perhaps. I also need to make sure the cloudformation templates are being acted on first. I will probably need to put them in the same workflow somehow.
 
 In order to automatically push the stack I first tried to use a github action provided by AWS. Unfortunately that action can only handle a single template and not its dependencies. I therefore had to follow the directions to first "package" the stack to an S3 bucket and then deploy using that packaging.
+
+One problem I encountered was misnaming a YAML property and also placing it at the wrong level. I'll look for two solutions: An automated step I can add to a github action as well as a VS Code plugin.
+
+
