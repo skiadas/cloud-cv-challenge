@@ -25,7 +25,7 @@ jobs:
       - name: Print the Cloud Formation Linter Version & run Linter.
         run: |
           cfn-lint --version
-          cfn-lint -t ./template.yml
+          cfn-lint -t ./cloudFormation/*.yml
       - uses: aws-actions/configure-aws-credentials@v1
         with:
           role-to-assume: ${{ env.ROLE }}
