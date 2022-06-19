@@ -2,8 +2,8 @@ name: push-to-s3
 on:
   push:
     paths:
-      - 'site/**'
-      - 'cloudFormation/**'
+      - "site/**"
+      - "cloudFormation/**"
   workflow_dispatch:
 
 permissions:
@@ -26,16 +26,16 @@ jobs:
           role-duration-seconds: 900
           aws-region: us-east-1
       - run: >
-        aws cloudformation package
-        --template-file ./cloudFormation/main.yaml
-        --s3-bucket skiadas-resume-templates
-        --output-template-file packaged.template
+          aws cloudformation package
+          --template-file ./cloudFormation/main.yaml
+          --s3-bucket skiadas-resume-templates
+          --output-template-file packaged.template
       - run: >
-        aws cloudformation deploy
-        --stack-name skiadas-resume-stack
-        --template-file packaged.template
-        --capabilities CAPABILITY_NAMED_IAM CAPABILITY_AUTO_EXPAND
-        --parameter-overrides SubDomain=$SUBDOMAIN DomainName=$DOMAIN_NAME
-        HostedZoneId=ZONE_ID BucketName=$BUCKET
+          aws cloudformation deploy
+          --stack-name skiadas-resume-stack
+          --s3-bucket skiadas-resume-templates
+          --template-file packaged.template
+          --capabilities CAPABILITY_NAMED_IAM CAPABILITY_AUTO_EXPAND
+          --parameter-overrides SubDomain=$SUBDOMAIN DomainName=$DOMAIN_NAME
+          HostedZoneId=ZONE_ID BucketName=$BUCKET
       - run: aws s3 sync --delete ./site s3://$BUCKET
-
