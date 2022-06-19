@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: 2010-09-09
-Description: Based on: ACFS3 - S3 Static site with CF and ACM
+Description: Based on ACFS3 - S3 Static site with CF and ACM
 
 # This sets up the way these parameters will show up on the console
 Metadata:
