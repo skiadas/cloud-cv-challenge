@@ -47,5 +47,5 @@ jobs:
           --capabilities CAPABILITY_NAMED_IAM CAPABILITY_AUTO_EXPAND
           --disable-rollback
           --parameter-overrides SubDomain=$SUBDOMAIN DomainName=$DOMAIN_NAME
-          HostedZoneId=ZONE_ID BucketName=$BUCKET
+          HostedZoneId=$ZONE_ID BucketName=$BUCKET
       - run: aws s3 sync --delete ./site s3://$BUCKET
