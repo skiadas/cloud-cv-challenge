@@ -12,9 +12,6 @@ Parameters:
   SubDomain:
     Description: Subdomain
     Type: String
-  S3BucketLogs:
-    Description: Logging Bucket
-    Type: String
   S3BucketRoot:
     Description: Content Bucket
     Type: String
