@@ -13,8 +13,8 @@ Parameters:
 Resources:
   S3BucketLogs:
     Type: AWS::S3::Bucket
-    DeletionPolicy: Retain
-    UpdateReplacePolicy: Retain
+    DeletionPolicy: Delete
+    UpdateReplacePolicy: Delete
     Properties:
       BucketName: !Sub "${BucketName}-logs"
       AccessControl: LogDeliveryWrite
@@ -28,8 +28,8 @@ Resources:
 
   S3BucketRoot:
     Type: AWS::S3::Bucket
-    DeletionPolicy: Retain
-    UpdateReplacePolicy: Retain
+    DeletionPolicy: Delete
+    UpdateReplacePolicy: Delete
     Properties:
       BucketName: !Ref BucketName
       BucketEncryption:
