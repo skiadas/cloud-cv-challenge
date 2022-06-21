@@ -25,4 +25,9 @@ In order to automatically push the stack I first tried to use a github action pr
 
 One problem I encountered was misnaming a YAML property and also placing it at the wrong level. I'll look for two solutions: An automated step I can add to a github action as well as a VS Code plugin.
 
-I incorporated the cf linter at both levels. Then I spent a lot of time troubleshooting my stack which kept failing to create the certificate. It turns out I forgot to put a $ in front of a parameter. This took quite a long time to identify and fix.
+I incorporated the cf linter at both levels. Then I spent a lot of time troubleshooting my stack which kept failing to create the certificate. It turns out I forgot to put a $ in front of a parameter. This took quite a long time to identify and fix. One of the challenges was that the certificate stack was being deleted as part of rollback-on-failure. Temporarily disabling that allowed me to get better error messages. I feel there should be a better way however, troubleshooting cloud formation errors feels a bit too random right now.
+
+Now we've got something working. What remains:
+
+- Arrange the tasks in the workflow so that they only run when appropriate: stack-changing tasks only run when the cloud formation templates have changed, while the syncing job only runs when the site folder has changed.
+- Create better error-handling pages (access denied, 404 etc).

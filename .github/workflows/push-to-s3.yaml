@@ -19,10 +19,19 @@ jobs:
       DOMAIN_NAME: ${{ secrets.DOMAIN }}
       ZONE_ID: ${{ secrets.HOSTED_ZONE_ID}}
     steps:
-      - uses: actions/checkout@v3
+      - name: Check out the repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 2
+      - name: Check for site of CF changes
+        id: changes
+        run: |
+          echo "::set-output name=site::$(git diff --name-only --diff-filter=ACMRT HEAD HEAD~ | grep '^site/' | xargs)"
+          echo "::set-output name=cf::$(git diff --name-only --diff-filter=ACMRT HEAD HEAD~ | grep '^cloudFormation/' | xargs)"
       - name: Setup Cloud Formation Linter with Latest Version
         uses: scottbrenner/cfn-lint-action@v2
       - name: Print the Cloud Formation Linter Version & run Linter.
+        if: ${{steps.changes.outputs.cf}}
         run: |
           cfn-lint --version
           cfn-lint -t ./cloudFormation/main.yaml
@@ -34,18 +43,23 @@ jobs:
           role-to-assume: ${{ env.ROLE }}
           role-duration-seconds: 900
           aws-region: us-east-1
-      - run: >
+      - name: Prepare our CF stack templates
+        if: ${{steps.changes.outputs.cf}}
+        run: >
           aws cloudformation package
           --template-file ./cloudFormation/main.yaml
           --s3-bucket skiadas-resume-templates
           --output-template-file packaged.template
-      - run: >
+      - name: Update our CF stack
+        if: ${{steps.changes.outputs.cf}}
+        run: >
           aws cloudformation deploy
           --stack-name skiadas-resume-stack
           --s3-bucket skiadas-resume-templates
           --template-file packaged.template
           --capabilities CAPABILITY_NAMED_IAM CAPABILITY_AUTO_EXPAND
-          --disable-rollback
           --parameter-overrides SubDomain=$SUBDOMAIN DomainName=$DOMAIN_NAME
           HostedZoneId=$ZONE_ID BucketName=$BUCKET
-      - run: aws s3 sync --delete ./site s3://$BUCKET
+      - name: Sync S3 bucket
+        if: ${{steps.changes.outputs.site}}
+        run: aws s3 sync --delete ./site s3://$BUCKET
