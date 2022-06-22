@@ -35,4 +35,6 @@ Now we've got something working. What remains:
 However now I need to invalidate the cache whenever the site updates. The problem is how to get hold of the ids of the distributions that need to be invalidated. My plan for this right now is as follows:
 
 1. Add the cloudfront distribution id to the CF stack that builds the distribution.
-2. Query the stack from the command line for its output.
+2. Export that id.
+3. Query the stack from the command line for its exports.
+4. Learn how to use JMES queries to extract the appropriate value.

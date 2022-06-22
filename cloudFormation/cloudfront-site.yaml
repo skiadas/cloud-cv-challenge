@@ -146,4 +146,4 @@ Outputs:
     Description: CloudFront distribution id
     Value: !Ref CloudFrontDistribution
     Export:
-      Name: !Join [ ":", [ !Ref "AWS::StackName", "distribution" ] ]
+      Name: "skiadas-resume-distribution"
