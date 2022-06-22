@@ -135,9 +135,15 @@ Resources:
 
 Outputs:
   CloudFrontDistribution:
-    Description: CloudFront distribution
+    Description: CloudFront distribution domain name
     Value: !GetAtt CloudFrontDistribution.DomainName
 
   CloudFrontDomainName:
     Description: Website address
     Value: !Sub '${SubDomain}.${DomainName}'
+
+  CloudFrontDistributionId:
+    Description: CloudFront distribution id
+    Value: !Ref CloudFrontDistribution
+    Export:
+      Name: !Join [ ":", [ !Ref "AWS::StackName", "distribution" ] ]
