@@ -68,5 +68,5 @@ jobs:
         if: ${{steps.changes.outputs.site}}
         run: >
           aws cloudfront create-invalidation
-          --distribution-id $(aws cloudformation --profile admin --region us-east-1 list-exports --query "Exports[?Name=='skiadas-resume-distribution'].Value | [0]")
+          --distribution-id $(aws cloudformation --region us-east-1 list-exports --query "Exports[?Name=='skiadas-resume-distribution'].Value | [0]")
           --paths "/*"
