@@ -29,5 +29,5 @@ I incorporated the cf linter at both levels. Then I spent a lot of time troubles
 
 Now we've got something working. What remains:
 
-- Arrange the tasks in the workflow so that they only run when appropriate: stack-changing tasks only run when the cloud formation templates have changed, while the syncing job only runs when the site folder has changed.
+- Arrange the tasks in the workflow so that they only run when appropriate: stack-changing tasks only run when the cloud formation templates have changed, while the syncing job only runs when the site folder has changed. DONE!
 - Create better error-handling pages (access denied, 404 etc).
