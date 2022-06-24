@@ -32,4 +32,10 @@ I think I will follow these steps, in terms of building the SAM:
 7. Add Javascript to my webpage that queries this API.
 8. After this is working, I will work on creating more tables.
 
-Let's get started. My first attempt at building a DynamoDb table failed because I have not given the GitHub action role the required permissions. 
+Let's get started. My first attempt at building a DynamoDb table failed because I had not given the GitHub action role the required permissions. With that out of the way, and the application already linked to my main stack, the next order of business is writing a function that updates the table.
+
+I want to use Python and boto3 for this, and to be able to test it locally. I start with locating an appropriate [cloudfront lambda@edge event template](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/lambda-event-structure.html). I'm going to put all the relevant code in an `app` folder, so I'll make a `tests` folder there. Looking at the template it appears the main thing I care about is the uri.
+
+Now, I'm thinking I don't want this function to talk directly to the database, I want it to simply send the request to SQS, then have another function that processes that SQS message. I will start by creating this queue service, and then adding the two functions on its either side.
+
+

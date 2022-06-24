@@ -11,5 +11,13 @@ Resources:
         Type: String
       TableName: skiadas-resume-SitePathCounts
       Tags:
-        Key: project
-        Value: resume-skiadas
+        project: resume-skiadas
+
+  IncomingRequestQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: skiadas-resume-incoming-request-queue
+      MessageRetentionPeriod: 3600 # One hour
+      Tags:
+        - Key: project
+          Value: resume-skiadas
