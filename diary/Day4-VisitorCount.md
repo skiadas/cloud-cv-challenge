@@ -32,4 +32,4 @@ I think I will follow these steps, in terms of building the SAM:
 7. Add Javascript to my webpage that queries this API.
 8. After this is working, I will work on creating more tables.
 
-Let's get started.
+Let's get started. My first attempt at building a DynamoDb table failed because I have not given the GitHub action role the required permissions. 
