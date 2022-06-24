@@ -93,6 +93,14 @@ Resources:
         - Key: project
           Value: resume-skiadas
 
+  CountersStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: ./counters.yaml
+      Tags:
+        - Key: project
+          Value: resume-skiadas
+
 Outputs:
   SolutionVersion:
     Value: !FindInMap [Solution, Constants, Version]

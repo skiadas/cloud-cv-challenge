@@ -1,0 +1,15 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Resources needed to orchestrate the counters
+Transform: AWS::Serverless-2016-10-31
+
+Resources:
+  TotalCountTable:
+    Type: AWS::Serverless::SimpleTable
+    Properties:
+      PrimaryKey:
+        Name: path
+        Type: String
+      TableName: SitePathCounts
+      Tags:
+        Key: project
+        Value: resume-skiadas
