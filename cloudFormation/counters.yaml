@@ -7,9 +7,9 @@ Resources:
     Type: AWS::Serverless::SimpleTable
     Properties:
       PrimaryKey:
-        Name: skiadas-resume-paths
+        Name: path
         Type: String
-      TableName: SitePathCounts
+      TableName: skiadas-resume-SitePathCounts
       Tags:
         Key: project
         Value: resume-skiadas
