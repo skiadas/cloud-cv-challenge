@@ -38,4 +38,6 @@ I want to use Python and boto3 for this, and to be able to test it locally. I st
 
 Now, I'm thinking I don't want this function to talk directly to the database, I want it to simply send the request to SQS, then have another function that processes that SQS message. I will start by creating this queue service, and then adding the two functions on its either side.
 
+Creating the queue service was fairly easy, again once I gave my script the requisite permissions.
+
 

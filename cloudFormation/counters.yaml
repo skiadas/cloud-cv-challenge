@@ -2,7 +2,18 @@ AWSTemplateFormatVersion: "2010-09-09"
 Description: Resources needed to orchestrate the counters
 Transform: AWS::Serverless-2016-10-31
 
+Globals:
+  Function:
+    Runtime: python3.9
 Resources:
+  IncomingRequestFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: app.lambda_incoming_to_sqs_handler
+      CodeUri: ../app/
+      Architectures:
+        - x86_64
+
   TotalCountTable:
     Type: AWS::Serverless::SimpleTable
     Properties:
@@ -21,3 +32,8 @@ Resources:
       Tags:
         - Key: project
           Value: resume-skiadas
+
+Outputs:
+  IncomingRequestFunction:
+    Description: Function to trigger on viewer requests
+    Value: !Ref IncomingRequestFunction
