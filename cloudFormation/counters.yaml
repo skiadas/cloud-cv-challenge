@@ -8,6 +8,7 @@ Globals:
 Resources:
   IncomingRequestFunction:
     Type: AWS::Serverless::Function
+    Name: skiadas-resume-lambda
     Properties:
       Handler: app.lambda_incoming_to_sqs_handler
       CodeUri: ../app/
