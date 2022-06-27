@@ -13,6 +13,9 @@ Globals:
   Function:
     Runtime: python3.9
     CodeUri: ../app/
+    Environment:
+      Variables:
+        QUEUE_NAME: !Sub '${ResourcePrefix}-incoming-request-queue'
 
 Resources:
   IncomingRequestFunction:

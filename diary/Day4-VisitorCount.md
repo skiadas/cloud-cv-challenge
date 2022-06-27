@@ -52,6 +52,11 @@ There will ultimately be three functions to test:
 - A function that processes messages from the queue and adds/updates entries in a dynamodb database. Sounds like I will need a separate database for these tests.
 - A function that is triggered at an API and returns suitable counter info from the database. Again I will need to use the database.
 
-I could probably mock some of these resources. And if my functions were doing any amount of serious work I would do so. But as it stands, it's all integration work and needs to be tested as a whole. So I will work on some integration testing by using a cloud-deployed test stack. I will avoid the cloudfront deployment part though. 
+I could probably mock some of these resources. And if my functions were doing any amount of serious work I would do so. But as it stands, it's all integration work and needs to be tested as a whole. So I will work on some integration testing by using a cloud-deployed test stack. I will avoid the cloudfront deployment part though.
 
+### Debugging SAM applications
+
+[Main article](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-test-and-debug.html)
+
+We can invoke a lambda function locally via `sam local invoke "name" -e event.json`. I further need `--template ...` because my SAM yaml is in a different location. I eventually was able to get that working, but the main challenge I faced was that local invocations of functions don't inherit the environment variables specified in the SAM stack file, or rather don't process all intrinsic functions used there, most notably `GetAtt`, so I had to provide the queue name separately for the tests. A bit awkward unfortunately. But other than that, this got the function execution working. Right now it relies on a script, but I'll work on enabling more automation shortly.
 
