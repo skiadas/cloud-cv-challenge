@@ -97,6 +97,8 @@ Resources:
     Type: AWS::CloudFormation::Stack
     Properties:
       TemplateURL: ./counters.yaml
+      Parameters:
+        ResourcePrefix: skiadas-resume
       Tags:
         - Key: project
           Value: resume-skiadas

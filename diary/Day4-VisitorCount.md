@@ -38,6 +38,20 @@ I want to use Python and boto3 for this, and to be able to test it locally. I st
 
 Now, I'm thinking I don't want this function to talk directly to the database, I want it to simply send the request to SQS, then have another function that processes that SQS message. I will start by creating this queue service, and then adding the two functions on its either side.
 
-Creating the queue service was fairly easy, again once I gave my script the requisite permissions.
+Creating the queue service was fairly easy, again once I gave my script the requisite permissions. I then created a lambda function, which is not doing much for now but it allowed me to work out the permissions for creating lambda functions.
+
+The biggest challenge right now I feel will be the testing. I would love to have some local testing capabilities, but my functions fundamentally interact with the AWS ecosystem, and there's no reasonable way to duplicate all that locally. The suggestion from AWS appears to be to effectively do the testing on actual "live" cloud resources, with something they call [AWS Accelerate](https://aws.amazon.com/blogs/compute/accelerating-serverless-development-with-aws-sam-accelerate/?sc_icampaign=launch_sam-accelerate&sc_ichannel=ha&sc_icontent=awssm-9887_launch&sc_iplace=ribbon&trk=ha_awssm-9887_launch), currently in [public preview](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/accelerate-getting-started.html). As I understand it, this effectively sets up a quick way to update a stack as you iterate on your application, which is a good start point, it can be the beginning of a more automated process. I will try to set up a test infrastructure that roughly does the following:
+
+- Starts the sam sync on a new test stack, that only contains my "counters" stuff.
+- Run Python test files.
+- Tear down the stack.
+
+There will ultimately be three functions to test:
+
+- A function that takes in a cloudfront visitor event and adds an event to a SQS queue. I will be able to provide it with custom visitor events, and I want to see if a message went to the queue.
+- A function that processes messages from the queue and adds/updates entries in a dynamodb database. Sounds like I will need a separate database for these tests.
+- A function that is triggered at an API and returns suitable counter info from the database. Again I will need to use the database.
+
+I could probably mock some of these resources. And if my functions were doing any amount of serious work I would do so. But as it stands, it's all integration work and needs to be tested as a whole. So I will work on some integration testing by using a cloud-deployed test stack. I will avoid the cloudfront deployment part though. 
 
 

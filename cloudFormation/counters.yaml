@@ -2,18 +2,29 @@ AWSTemplateFormatVersion: "2010-09-09"
 Description: Resources needed to orchestrate the counters
 Transform: AWS::Serverless-2016-10-31
 
+Parameters:
+  ResourcePrefix:
+    Description: A prefix to be used for resource names, useful for separate testing
+    Type: String
+    Default: test-resume
+    AllowedPattern: ^[a-zA-Z\-\_0-9]+$
+
 Globals:
   Function:
     Runtime: python3.9
+    CodeUri: ../app/
+
 Resources:
   IncomingRequestFunction:
     Type: AWS::Serverless::Function
-    Name: skiadas-resume-lambda
+    Name: !Sub '${ResourcePrefix}-lambda'
     Properties:
       Handler: app.lambda_incoming_to_sqs_handler
-      CodeUri: ../app/
       Architectures:
         - x86_64
+      Policies:
+        SQSSendMessagePolicy:
+          QueueName: !GetAtt IncomingRequestQueue.QueueName
 
   TotalCountTable:
     Type: AWS::Serverless::SimpleTable
@@ -21,14 +32,14 @@ Resources:
       PrimaryKey:
         Name: path
         Type: String
-      TableName: skiadas-resume-SitePathCounts
+      TableName: !Sub '${ResourcePrefix}-SitePathCounts'
       Tags:
         project: resume-skiadas
 
   IncomingRequestQueue:
     Type: AWS::SQS::Queue
     Properties:
-      QueueName: skiadas-resume-incoming-request-queue
+      QueueName: !Sub '${ResourcePrefix}-incoming-request-queue'
       MessageRetentionPeriod: 3600 # One hour
       Tags:
         - Key: project
