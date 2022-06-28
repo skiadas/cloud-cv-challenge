@@ -1,0 +1,21 @@
+[tool.poetry]
+name = "app"
+version = "0.1.0"
+description = ""
+authors = ["Charilaos Skiadas <skiadas@hanover.edu>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.7"
+moto = "^3.1.16"
+pytest = "^7.1.2"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.pytest.ini_options]
+pythonpath = [
+  ".", "app",
+]
