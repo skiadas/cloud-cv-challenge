@@ -60,5 +60,21 @@ I could probably mock some of these resources. And if my functions were doing an
 
 We can invoke a lambda function locally via `sam local invoke "name" -e event.json`. I further need `--template ...` because my SAM yaml is in a different location. I eventually was able to get that working, but the main challenge I faced was that local invocations of functions don't inherit the environment variables specified in the SAM stack file, or rather don't process all intrinsic functions used there, most notably `GetAtt`, so I had to provide the queue name separately for the tests. A bit awkward unfortunately. But other than that, this got the function execution working. Right now it relies on a script, but I'll work on enabling more automation shortly. But first, following the directions on [the web page](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-using-invoke.html) I moved the environment variables to a JSON file.
 
+The next page in the AWS documentation on testing involves the [API Gateway](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-using-start-api.html). I will return to that when I work on the function that is exposed via a Gateway entry.
 
+On the next page we look at how to integrate this into automated tests. The key insight is to run a local "Lambda endpoint" using `sam local start-lambda`. This creates a local endpoint that emulates how the AWS Lambda endpoint behaves. That endpoint can then be called from an automated test script. My first attempts at this produce too much noise at the console, but at least they successfully run the function.
 
+Along the way I learned the useful `sam local generate-event s3 put` command for generating JSON event files.
+
+One practical problem at the time is that the function I am trying to test isn't actually returning anything useful, in fact it is expected to return the request it was given. I suppose I can test for that. But what I really want to test is that it adds a message to the SQS queue.
+
+I decided to use the [moto](http://docs.getmoto.org/en/latest/index.html) mocking library, and to set up pytest. That made me think about Python module dependencies, and I'm going to try using [poetry](https://python-poetry.org/docs/) for that. Not sure yet how it will all integrate yet, but one step at a time.
+
+I spent a lot of time troubleshooting timeout issues related to the local endpoint and how my Python boto3 client was connecting. It turns out I had configured the client to exit too soon (1 second timeout was not enough to spin up containers).
+
+The biggest problem I am encountering with AWS SAM Accelerate now is that I cannot mock services called from the lambda functions there, as they are running outside of my test harnesses. So the way I see it there are two tests I can write:
+
+- Unit tests that mock services and call on functions directly. These can't use the lambda invoke approach unless I can run them in the same process somehow, and I don't see how.
+- Integration tests that reply on a test SAM deployment and syncing to speed up development.
+
+I suspect there won't be much real work for the unit tests once I remove the invoking from the process, but we'll see. It does force me to break my code up into smaller pieces. So right now I have a process that simply pushes a message to a queue. I could perhaps write a unit test for it, but it frankly isn't doing anything.
