@@ -1,4 +1,3 @@
-import boto3
 import json
 # from client import get_client
 from moto import mock_sqs
