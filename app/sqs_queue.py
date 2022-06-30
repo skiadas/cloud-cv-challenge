@@ -7,7 +7,7 @@ class sqs_queue:
     def __init__(self, queueName, region):
         self.url = None
         self.region = region
-        self.sqs = client('sqs', region=self.region)
+        self.sqs = client('sqs', region_name=self.region)
         self.queueName = queueName
         self.sqs.create_queue(QueueName=self.queueName)
 
