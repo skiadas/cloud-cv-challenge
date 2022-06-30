@@ -78,3 +78,5 @@ The biggest problem I am encountering with AWS SAM Accelerate now is that I cann
 - Integration tests that reply on a test SAM deployment and syncing to speed up development.
 
 I suspect there won't be much real work for the unit tests once I remove the invoking from the process, but we'll see. It does force me to break my code up into smaller pieces. So right now I have a process that simply pushes a message to a queue. I could perhaps write a unit test for it, but it frankly isn't doing anything.
+
+Now having my first unit test running locally, I would like to automate that part of the process and add it to the github workflow system. I am thinking this is a separate workflow, and upon its successful completion the "deploy" workflow kicks in. So I need to build a dependence between the two actions.

@@ -2,6 +2,7 @@ name: push-to-s3
 on:
   push:
     paths:
+      - "app/**"
       - "site/**"
       - "cloudFormation/**"
   workflow_dispatch:
@@ -10,8 +11,67 @@ permissions:
   id-token: write # required to use OIDC authentication
   contents: read # required to checkout the code from the repo
 jobs:
-  pull-then-push:
+  check-out:
     runs-on: ubuntu-latest
+    outputs:
+      app: ${{ steps.changes.outputs.app }}
+      site: ${{ steps.changes.outputs.site }}
+      cf: ${{ steps.changes.outputs.cf }}
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 2
+      - name: Check for site of CF changes
+        id: changes
+        run: |
+          echo "::set-output name=app::$(git diff --name-only --diff-filter=ACMRT HEAD~ HEAD | grep '^app/' | xargs)"
+          echo "::set-output name=site::$(git diff --name-only --diff-filter=ACMRT HEAD~ HEAD | grep '^site/' | xargs)"
+          echo "::set-output name=cf::$(git diff --name-only --diff-filter=ACMRT HEAD~ HEAD | grep '^cloudFormation/' | xargs)"
+  cf-lint:
+    runs-on: ubuntu-latest
+    needs: check-out
+    if: ${{jobs.check-out.outputs.cf}}
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v3
+      - name: Setup Cloud Formation Linter with Latest Version
+        uses: scottbrenner/cfn-lint-action@v2
+      - name: Print the Cloud Formation Linter Version & run Linter.
+        run: |
+          cfn-lint --version
+          cfn-lint -t ./cloudFormation/main.yaml
+          cfn-lint -t ./cloudFormation/acm-certificate.yaml
+          cfn-lint -t ./cloudFormation/buckets.yaml
+          cfn-lint -t ./cloudFormation/cloudfront-site.yaml
+  app-test:
+    runs-on: ubuntu-latest
+    needs: check-out
+    if: ${{jobs.check-out.outputs.app}}
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: 3.9
+      - name: Install poetry
+        uses: abatilo/actions-poetry@v2.0.0
+        with:
+          poetry-version: 1.2
+      - name: View poetry --help
+        run: poetry --help
+      - name: Install packages
+        run: poetry install
+      - name: Run tests
+        run: poetry run pytest
+  upload:
+    runs-on: ubuntu-latest
+    needs:
+      - cf-lint
+      - app-test
+    if: >
+      ${{jobs.check-out.outputs.app}} ||
+      ${{jobs.check-out.outputs.site}} ||
+      ${{jobs.check-out.outputs.cf}}
     env:
       ROLE: ${{ secrets.AWS_ROLE }}
       BUCKET: ${{ secrets.BUCKET_NAME }}
@@ -21,38 +81,24 @@ jobs:
     steps:
       - name: Check out the repository
         uses: actions/checkout@v3
-        with:
-          fetch-depth: 2
-      - name: Check for site of CF changes
-        id: changes
-        run: |
-          echo "::set-output name=site::$(git diff --name-only --diff-filter=ACMRT HEAD~ HEAD | grep '^site/' | xargs)"
-          echo "::set-output name=cf::$(git diff --name-only --diff-filter=ACMRT HEAD~ HEAD | grep '^cloudFormation/' | xargs)"
-      - name: Setup Cloud Formation Linter with Latest Version
-        if: ${{steps.changes.outputs.cf}}
-        uses: scottbrenner/cfn-lint-action@v2
-      - name: Print the Cloud Formation Linter Version & run Linter.
-        if: ${{steps.changes.outputs.cf}}
-        run: |
-          cfn-lint --version
-          cfn-lint -t ./cloudFormation/main.yaml
-          cfn-lint -t ./cloudFormation/acm-certificate.yaml
-          cfn-lint -t ./cloudFormation/buckets.yaml
-          cfn-lint -t ./cloudFormation/cloudfront-site.yaml
       - uses: aws-actions/configure-aws-credentials@v1
         with:
           role-to-assume: ${{ env.ROLE }}
           role-duration-seconds: 900
           aws-region: us-east-1
       - name: Prepare our CF stack templates
-        if: ${{steps.changes.outputs.cf}}
+        if: >
+          ${{jobs.check-out.outputs.cf}} ||
+          ${{jobs.check-out.outputs.site}}
         run: >
           aws cloudformation package
           --template-file ./cloudFormation/main.yaml
           --s3-bucket skiadas-resume-templates
           --output-template-file packaged.template
       - name: Update our CF stack
-        if: ${{steps.changes.outputs.cf}}
+        if: >
+          ${{jobs.check-out.outputs.cf}} ||
+          ${{jobs.check-out.outputs.site}}
         run: >
           aws cloudformation deploy
           --stack-name skiadas-resume-stack
@@ -62,10 +108,10 @@ jobs:
           --parameter-overrides SubDomain=$SUBDOMAIN DomainName=$DOMAIN_NAME
           HostedZoneId=$ZONE_ID BucketName=$BUCKET
       - name: Sync S3 bucket
-        if: ${{steps.changes.outputs.site}}
+        if: ${{jobs.check-out.outputs.site}}
         run: aws s3 sync --delete ./site s3://$BUCKET
       - name: Invalidate the cache
-        if: ${{steps.changes.outputs.site}}
+        if: ${{jobs.check-out.outputs.site}}
         run: >
           aws cloudfront create-invalidation
           --distribution-id $(aws cloudformation --output text --region us-east-1 list-exports --query "Exports[?Name=='skiadas-resume-distribution'].Value | [0]")
