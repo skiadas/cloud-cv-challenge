@@ -8,7 +8,7 @@ readme = "README.md"
 [tool.poetry.dependencies]
 python = "^3.7"
 
-[tool.poetry.group.test.dependencies]
+[tool.poetry.dev-dependencies]
 moto = "^3.1.16"
 pytest = "^7.1.2"
 
