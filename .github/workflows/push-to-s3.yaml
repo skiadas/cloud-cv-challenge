@@ -58,7 +58,10 @@ jobs:
       - name: Install packages
         run: poetry install
       - name: Run tests
-        run: poetry run pytest
+        run: >
+          poetry run pytest
+          --cov-config=.coveragerc
+          --cov=app
   upload:
     runs-on: ubuntu-latest
     needs:
