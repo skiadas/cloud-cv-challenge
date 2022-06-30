@@ -3,6 +3,8 @@ import json
 from moto import mock_sqs
 from app import process_incoming_request
 from sqs_queue import sqs_queue
+import pytest
+import os
 
 QUEUE_NAME = 'test-queue'
 
@@ -43,12 +45,22 @@ expected_message='''
 '''
 
 @mock_sqs
-def test_record_to_queue():
-  queue = sqs_queue(QUEUE_NAME, 'us-east-1')
+def test_record_to_queue(aws_credentials):
+  queue = sqs_queue(QUEUE_NAME)
   process_incoming_request(json.loads(request), queue.get_url())
   # Verify SQS called
   assert queue.get_attribute('ApproximateNumberOfMessages') == '1'
   assert json.loads(queue.get_next_message_body()) == json.loads(expected_message)
+
+
+@pytest.fixture(scope='function')
+def aws_credentials():
+    """Mocked AWS Credentials for moto."""
+    os.environ['AWS_ACCESS_KEY_ID'] = 'testing'
+    os.environ['AWS_SECRET_ACCESS_KEY'] = 'testing'
+    os.environ['AWS_SECURITY_TOKEN'] = 'testing'
+    os.environ['AWS_SESSION_TOKEN'] = 'testing'
+    os.environ['AWS_DEFAULT_REGION'] = 'us-east-1'
 
 # This all belongs somewhere else
 # As part of some integration tests

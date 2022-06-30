@@ -4,10 +4,9 @@ from boto3 import client
 # for starters it always creates the queue, so used mostly for testing
 # and with a moto-mocked sqs
 class sqs_queue:
-    def __init__(self, queueName, region):
+    def __init__(self, queueName):
         self.url = None
-        self.region = region
-        self.sqs = client('sqs', region_name=self.region)
+        self.sqs = client('sqs')
         self.queueName = queueName
         self.sqs.create_queue(QueueName=self.queueName)
 
