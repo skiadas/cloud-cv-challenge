@@ -44,7 +44,7 @@ expected_message='''
 
 @mock_sqs
 def test_record_to_queue():
-  queue = sqs_queue(QUEUE_NAME)
+  queue = sqs_queue(QUEUE_NAME, 'us-east-1')
   process_incoming_request(json.loads(request), queue.get_url())
   # Verify SQS called
   assert queue.get_attribute('ApproximateNumberOfMessages') == '1'
