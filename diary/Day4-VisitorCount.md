@@ -81,4 +81,4 @@ I suspect there won't be much real work for the unit tests once I remove the inv
 
 Now having my first unit test running locally, I would like to automate that part of the process and add it to the github workflow system. I am thinking this is a separate workflow, and upon its successful completion the "deploy" workflow kicks in. So I need to build a dependence between the two actions.
 
-Ok I have now added steps to my workflow to run pytest using poetry. I will now add coverage reporting, using `pytest-cov`.
+Ok I have now added steps to my workflow to run pytest using poetry. I will now add coverage reporting, using `pytest-cov`. I would like something better at some point, as for now it doesn't really tell me precisely which lines are not covered, but I'll generate the XML which has this information for now.

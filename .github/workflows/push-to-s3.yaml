@@ -63,6 +63,7 @@ jobs:
           --cov-config=.coveragerc
           --cov=app
           --cov-report html:cov_html
+          --cov-report xml:coverage.xml
   upload:
     runs-on: ubuntu-latest
     needs:
