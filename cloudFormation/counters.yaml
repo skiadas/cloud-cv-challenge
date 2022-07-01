@@ -28,6 +28,9 @@ Resources:
       Policies:
         SQSSendMessagePolicy:
           QueueName: !GetAtt IncomingRequestQueue.QueueName
+      Environment:
+        Variables:
+          SITE_COUNTS: !Ref TotalCountTable
 
   TotalCountTable:
     Type: AWS::Serverless::SimpleTable

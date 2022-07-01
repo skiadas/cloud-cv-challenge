@@ -1,8 +1,9 @@
 import json
 # from client import get_client
-from moto import mock_sqs
-from app import process_incoming_request
+from moto import mock_sqs, mock_dynamodb
+from app import process_incoming_request, process_sqs_message
 from sqs_queue import sqs_queue
+from dynamodb import dbtable
 import pytest
 import os
 
@@ -17,6 +18,15 @@ def test_record_to_queue(aws_credentials, request_cf):
   expected_json = { "ip": "203.0.113.178", "path": "/" }
   assert json.loads(queue.get_next_message_body()) == expected_json
 
+@mock_dynamodb
+def test_sqs_message_updates_db(aws_credentials, table_names):
+  site_counts_table = dbtable(table_names['SITE_COUNTS'], 'path')
+  process_sqs_message("{ \"ip\": \"203.0.113.178\", \"path\": \"/\" }")
+  process_sqs_message("{ \"ip\": \"203.0.113.178\", \"path\": \"/home\" }")
+  process_sqs_message("{ \"ip\": \"203.0.113.174\", \"path\": \"/\" }")
+  assert site_counts_table.get("/") == 2
+  assert site_counts_table.get("/home") == 1
+  assert site_counts_table.entries_count() == 2
 
 @pytest.fixture(scope='function')
 def aws_credentials():
@@ -26,6 +36,18 @@ def aws_credentials():
     os.environ['AWS_SECURITY_TOKEN'] = 'testing'
     os.environ['AWS_SESSION_TOKEN'] = 'testing'
     os.environ['AWS_DEFAULT_REGION'] = 'us-east-1'
+
+@pytest.fixture(scope='function')
+def table_names():
+    """Provided table names for function to use."""
+    values = {
+      'SITE_COUNTS': 'test-site-counts',
+      'TOTAL_COUNT': 'test-total-count',
+      'IP_COUNTS': 'test-ip-counts'
+    }
+    os.environ.update(values)
+    print(os.environ['SITE_COUNTS'])
+    return values
 
 @pytest.fixture(scope="function")
 def request_cf():
