@@ -1,3 +1,6 @@
 .aws-sam
 logs/*
 __pycache__
+coverage.xml
+.coverage
+
