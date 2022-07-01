@@ -82,3 +82,8 @@ I suspect there won't be much real work for the unit tests once I remove the inv
 Now having my first unit test running locally, I would like to automate that part of the process and add it to the github workflow system. I am thinking this is a separate workflow, and upon its successful completion the "deploy" workflow kicks in. So I need to build a dependence between the two actions.
 
 Ok I have now added steps to my workflow to run pytest using poetry. I will now add coverage reporting, using `pytest-cov`. I would like something better at some point, as for now it doesn't really tell me precisely which lines are not covered, but I'll generate the XML which has this information for now.
+
+Having this one test in place in a mocked fashion, I will now prepare the other two functions and unit tests for them, before setting up a non-mocked integration test. We have two more functions:
+
+A function that will process an SQS event and update corresponding database entries. It's supposed to store counts by ip, by url, and a total. In order to run the queries, I can choose between using [PartiQL](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/ql-reference.html) or more [classic API calls](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/HowItWorks.API.html). I'm going to use classic API for now, though PartiQL is certainly interesting.
+
