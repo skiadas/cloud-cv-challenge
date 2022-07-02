@@ -20,9 +20,9 @@ def test_record_to_queue(aws_credentials, request_cf):
 
 @mock_dynamodb
 def test_sqs_message_updates_db(aws_credentials, table_names):
-  site_counts_table = dbtable(table_names['SITE_COUNTS'], 'path')
-  ip_table = dbtable(table_names['IP_COUNTS'], 'ip')
-  total_table = dbtable(table_names['TOTAL_COUNT'], 'total')
+  site_counts_table = dbtable.create(table_names['SITE_COUNTS'], 'path')
+  ip_table = dbtable.create(table_names['IP_COUNTS'], 'ip')
+  total_table = dbtable.create(table_names['TOTAL_COUNT'], 'total')
   process_sqs_message("{ \"ip\": \"203.0.113.178\", \"path\": \"/\" }")
   process_sqs_message("{ \"ip\": \"203.0.113.178\", \"path\": \"/home\" }")
   process_sqs_message("{ \"ip\": \"203.0.113.174\", \"path\": \"/\" }")

@@ -3,15 +3,21 @@ from boto3 import client
 ## Manages a dynamodb database
 
 class dbtable:
+    @classmethod
+    def create(cls, tableName, keyName):
+      obj = cls(tableName, keyName)
+      obj.dynamodb.create_table(
+          TableName=tableName,
+          AttributeDefinitions=[
+              {'AttributeName': keyName, 'AttributeType': 'S'}],
+          KeySchema=[{'AttributeName': keyName, 'KeyType': 'HASH'}],
+          BillingMode='PAY_PER_REQUEST')
+      return obj
+
     def __init__(self, tableName, keyName):
         self.dynamodb = client('dynamodb')
         self.tableName = tableName
         self.keyName = keyName
-        self.dynamodb.create_table(
-          TableName=tableName,
-          AttributeDefinitions=[{ 'AttributeName': keyName, 'AttributeType': 'S' }],
-          KeySchema=[{ 'AttributeName': keyName, 'KeyType': 'HASH' }],
-          BillingMode='PAY_PER_REQUEST')
 
     def get(self, keyValue):
       """Return the value for given key"""

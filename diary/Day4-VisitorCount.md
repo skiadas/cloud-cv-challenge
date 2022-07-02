@@ -92,3 +92,6 @@ I have to admit writing the table queries was somewhat awkward, syntax-wise. But
 Now that I have the db-writing stuff set up I also need one more function that for a given host and path input will return the corresponding counts as well as the total count. I will later link that up to an API.
 
 I ran into problems with a cloudformation stack update when I changed the name of a table, or rather tried to reuse an existing table in a new place in the stack. I will try a new name to see if that magically fixes things.
+
+Moving on to the function that will read from the database, I find myself replicating the work that I did in my dynamodb class. I knew this was coming, and it's time to deal with it. The problem is that I want to have two different kinds of tables: Those I *create*, for example in testing, and those I *access*, during production and from my app functions. I essentially need Python's version of multiple constructors, so starting to look into that, using [this tutorial as a start](https://realpython.com/python-multiple-constructors/).
+
