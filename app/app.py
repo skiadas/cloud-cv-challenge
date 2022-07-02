@@ -1,6 +1,7 @@
 import boto3
 import json
 import os
+from dynamodb import dbtable
 
 ## SAM part
 def lambda_incoming_to_sqs_handler(event, context):
@@ -12,6 +13,14 @@ def lambda_incoming_to_sqs_handler(event, context):
 def lambda_processing_sqs_message(event, context):
   body = event['Records'][0]['body']
   process_sqs_message(body)
+
+def lambda_read_db_data(event, context):
+  query = event['queryStringParameters']
+  data = read_db_data(query)
+  return {
+      statusCode: 200,
+      body: JSON.stringify(data)
+  }
 
 ## Unit-testable parts
 
@@ -28,14 +37,19 @@ def send_to_queue(queue, message):
 
 def process_sqs_message(body):
   d = json.loads(body)
-  update_db(os.environ['SITE_COUNTS'], 'path', d['path'])
-  update_db(os.environ['IP_COUNTS'], 'ip', d['ip'])
-  update_db(os.environ['TOTAL_COUNT'], 'total', 'total')
+  dbtable(os.environ['SITE_COUNTS'], 'path').increaseCount(d['path'])
+  dbtable(os.environ['IP_COUNTS'], 'ip').increaseCount(d['ip'])
+  dbtable(os.environ['TOTAL_COUNT'], 'total').increaseCount('total')
 
-def update_db(tableName, keyName, keyValue):
-  boto3.client('dynamodb').update_item(
-      TableName=tableName,
-      Key={keyName: {'S': keyValue}},
-      UpdateExpression='ADD #c :n',
-      ExpressionAttributeNames={'#c': 'count'},
-      ExpressionAttributeValues={':n': {'N': '1'}})
+def read_db_data(query):
+  path = query['path']
+  ip = query['ip']
+
+
+def get_db_value(tableName, keyName):
+    boto3.client('dynamodb').get_item(
+        TableName=tableName,
+        Key={keyName: {'S': keyValue}},
+        UpdateExpression='ADD #c :n',
+        ExpressionAttributeNames={'#c': 'count'},
+        ExpressionAttributeValues={':n': {'N': '1'}})

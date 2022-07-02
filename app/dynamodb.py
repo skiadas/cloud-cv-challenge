@@ -32,6 +32,15 @@ class dbtable:
       else:
         return None
 
+    def increaseCount(self, keyValue):
+      self.dynamodb.update_item(
+        TableName=self.tableName,
+        Key={self.keyName: {'S': keyValue}},
+        UpdateExpression='ADD #c :n',
+        ExpressionAttributeNames={'#c': 'count'},
+        ExpressionAttributeValues={':n': {'N': '1'}})
+
+
     def entries_count(self):
       """Returns the total number of entries in the table"""
       result = self.dynamodb.describe_table(TableName=self.tableName)['Table']
