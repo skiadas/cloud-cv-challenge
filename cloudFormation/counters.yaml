@@ -40,7 +40,7 @@ Resources:
       PrimaryKey:
         Name: path
         Type: String
-      TableName: !Sub '${ResourcePrefix}-SitePathCounts'
+      TableName: !Sub '${ResourcePrefix}-PathCounts'
       Tags:
         project: resume-skiadas
 

@@ -88,3 +88,7 @@ Having this one test in place in a mocked fashion, I will now prepare the other 
 A function that will process an SQS event and update corresponding database entries. It's supposed to store counts by ip, by url, and a total. In order to run the queries, I can choose between using [PartiQL](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/ql-reference.html) or more [classic API calls](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/HowItWorks.API.html). I'm going to use classic API for now, though PartiQL is certainly interesting.
 
 I have to admit writing the table queries was somewhat awkward, syntax-wise. But I now have a basic test for the db-writing function. I'll expand it to work on 3 different tables first before moving on to the retrieval function.
+
+Now that I have the db-writing stuff set up I also need one more function that for a given host and path input will return the corresponding counts as well as the total count. I will later link that up to an API.
+
+I ran into problems with a cloudformation stack update when I changed the name of a table, or rather tried to reuse an existing table in a new place in the stack. I will try a new name to see if that magically fixes things.
