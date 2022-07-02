@@ -33,3 +33,14 @@ Actually thinking about it some more, this *can* be useful. I see three differen
 ## Using @classmethod to provide multiple constructors
 
 Class methods receive the class itself as a first parameter, rather than an object. They can then rely on calling the constructor themselves. This seems viable for my use case, so I will attempt to move the table-creation method there.
+
+This worked rather smoothly. I now have a `dbtable.create` method for when I need to actually create the table (namely in my tests). I will keep reading to see the other approaches though.
+
+## Using @singledispatchmethod
+
+This decorator allows us to turn a method into a "generic single dispatch method", meaning that it will dispatch to different other methods based on the type of its argument. It is available in the `functools` package.
+
+This requires some awkward tooling. first you need a method annotated with @singledispatchmethod. Then you need to use that method as a decorator like `@generic_method.register(str)` to implement the method that works when the first argument is of type string.
+
+So the first fundamental limitation, beyond the awkward syntax, is that this only dispatches on type, which isn't exactly what I was looking for. It also only dispatches on one parameter. Definitely not a fan of this technique.
+
