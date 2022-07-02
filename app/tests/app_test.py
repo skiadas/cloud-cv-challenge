@@ -21,12 +21,18 @@ def test_record_to_queue(aws_credentials, request_cf):
 @mock_dynamodb
 def test_sqs_message_updates_db(aws_credentials, table_names):
   site_counts_table = dbtable(table_names['SITE_COUNTS'], 'path')
+  ip_table = dbtable(table_names['IP_COUNTS'], 'ip')
+  total_table = dbtable(table_names['TOTAL_COUNT'], 'total')
   process_sqs_message("{ \"ip\": \"203.0.113.178\", \"path\": \"/\" }")
   process_sqs_message("{ \"ip\": \"203.0.113.178\", \"path\": \"/home\" }")
   process_sqs_message("{ \"ip\": \"203.0.113.174\", \"path\": \"/\" }")
   assert site_counts_table.get("/") == 2
   assert site_counts_table.get("/home") == 1
   assert site_counts_table.entries_count() == 2
+  assert ip_table.get("203.0.113.178") == 2
+  assert ip_table.get("203.0.113.174") == 1
+  assert ip_table.entries_count() == 2
+  assert total_table.get("total") == 3
 
 @pytest.fixture(scope='function')
 def aws_credentials():
@@ -46,7 +52,6 @@ def table_names():
       'IP_COUNTS': 'test-ip-counts'
     }
     os.environ.update(values)
-    print(os.environ['SITE_COUNTS'])
     return values
 
 @pytest.fixture(scope="function")

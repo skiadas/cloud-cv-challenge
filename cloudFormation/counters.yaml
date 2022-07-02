@@ -30,9 +30,11 @@ Resources:
           QueueName: !GetAtt IncomingRequestQueue.QueueName
       Environment:
         Variables:
-          SITE_COUNTS: !Ref TotalCountTable
+          SITE_COUNTS: !Ref SiteCountTable
+          TOTAL_COUNT: !Ref TotalCountTable
+          IP_COUNTS: !Ref IpCountTable
 
-  TotalCountTable:
+  SiteCountTable:
     Type: AWS::Serverless::SimpleTable
     Properties:
       PrimaryKey:
@@ -41,6 +43,27 @@ Resources:
       TableName: !Sub '${ResourcePrefix}-SitePathCounts'
       Tags:
         project: resume-skiadas
+
+  TotalCountTable:
+    Type: AWS::Serverless::SimpleTable
+    Properties:
+      PrimaryKey:
+        Name: count
+        Type: String
+      TableName: !Sub '${ResourcePrefix}-TotalCount'
+      Tags:
+        project: resume-skiadas
+
+  IpCountTable:
+    Type: AWS::Serverless::SimpleTable
+    Properties:
+      PrimaryKey:
+        Name: ip
+        Type: String
+      TableName: !Sub '${ResourcePrefix}-IpCounts'
+      Tags:
+        project: resume-skiadas
+
 
   IncomingRequestQueue:
     Type: AWS::SQS::Queue
