@@ -16,10 +16,10 @@ def lambda_processing_sqs_message(event, context):
 
 def lambda_read_db_data(event, context):
   query = event['queryStringParameters']
-  data = read_db_data(query)
+  count_data = read_db_data(query)
   return {
       statusCode: 200,
-      body: JSON.stringify(data)
+      body: JSON.stringify(count_data)
   }
 
 ## Unit-testable parts
@@ -42,8 +42,13 @@ def process_sqs_message(body):
   dbtable(os.environ['TOTAL_COUNT'], 'total').increaseCount('total')
 
 def read_db_data(query):
-  path = query['path']
-  ip = query['ip']
+  return {
+      'ip': dbtable(os.environ['IP_COUNTS'], 'ip').get(query['ip']),
+      'path': dbtable(os.environ['SITE_COUNTS'], 'path').get(query['path']),
+      'total': dbtable(os.environ['TOTAL_COUNT'], 'total').get('total')
+  }
+
+
 
 
 def get_db_value(tableName, keyName):

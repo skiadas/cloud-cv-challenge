@@ -40,6 +40,14 @@ class dbtable:
         ExpressionAttributeNames={'#c': 'count'},
         ExpressionAttributeValues={':n': {'N': '1'}})
 
+    def setCount(self, keyValue, value):
+      self.dynamodb.update_item(
+          TableName=self.tableName,
+          Key={self.keyName: {'S': keyValue}},
+          UpdateExpression='SET #c = :n',
+          ExpressionAttributeNames={'#c': 'count'},
+          ExpressionAttributeValues={':n': {'N': str(value)}})
+
 
     def entries_count(self):
       """Returns the total number of entries in the table"""

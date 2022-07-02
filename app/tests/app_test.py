@@ -1,7 +1,7 @@
 import json
 # from client import get_client
 from moto import mock_sqs, mock_dynamodb
-from app import process_incoming_request, process_sqs_message
+from app import process_incoming_request, process_sqs_message, read_db_data
 from sqs_queue import sqs_queue
 from dynamodb import dbtable
 import pytest
@@ -20,19 +20,30 @@ def test_record_to_queue(aws_credentials, request_cf):
 
 @mock_dynamodb
 def test_sqs_message_updates_db(aws_credentials, table_names):
-  site_counts_table = dbtable.create(table_names['SITE_COUNTS'], 'path')
+  path_table = dbtable.create(table_names['SITE_COUNTS'], 'path')
   ip_table = dbtable.create(table_names['IP_COUNTS'], 'ip')
   total_table = dbtable.create(table_names['TOTAL_COUNT'], 'total')
   process_sqs_message("{ \"ip\": \"203.0.113.178\", \"path\": \"/\" }")
   process_sqs_message("{ \"ip\": \"203.0.113.178\", \"path\": \"/home\" }")
   process_sqs_message("{ \"ip\": \"203.0.113.174\", \"path\": \"/\" }")
-  assert site_counts_table.get("/") == 2
-  assert site_counts_table.get("/home") == 1
-  assert site_counts_table.entries_count() == 2
+  assert path_table.get("/") == 2
+  assert path_table.get("/home") == 1
+  assert path_table.entries_count() == 2
   assert ip_table.get("203.0.113.178") == 2
   assert ip_table.get("203.0.113.174") == 1
   assert ip_table.entries_count() == 2
   assert total_table.get("total") == 3
+
+
+@mock_dynamodb
+def test_data_retrieval(aws_credentials, table_names):
+    path_table = dbtable.create(table_names['SITE_COUNTS'], 'path')
+    ip_table = dbtable.create(table_names['IP_COUNTS'], 'ip')
+    total_table = dbtable.create(table_names['TOTAL_COUNT'], 'total')
+    path_table.setCount('/site', 1)
+    ip_table.setCount('203.123.111.3', 2)
+    total_table.setCount('total', 3)
+    assert read_db_data({'ip': '203.123.111.3', 'path': '/site' }) == { 'total': 3, 'ip': 2, 'path': 1}
 
 @pytest.fixture(scope='function')
 def aws_credentials():
