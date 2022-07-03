@@ -13,11 +13,16 @@ Globals:
   Function:
     Runtime: python3.9
     CodeUri: ../app/
-    Environment:
-      Variables:
-        QUEUE_NAME: !Sub '${ResourcePrefix}-incoming-request-queue'
 
 Resources:
+  BasicParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: counters_stack_queue_name
+      Type: String
+      Value: !Sub '${ResourcePrefix}-incoming-request-queue'
+      Description: SSM Parameter for the queue name
+
   IncomingRequestFunction:
     Type: AWS::Serverless::Function
     Name: !Sub '${ResourcePrefix}-lambda'
@@ -29,11 +34,6 @@ Resources:
       Policies:
         SQSSendMessagePolicy:
           QueueName: !GetAtt IncomingRequestQueue.QueueName
-      Environment:
-        Variables:
-          SITE_COUNTS: !Ref SiteCountTable
-          TOTAL_COUNT: !Ref TotalCountTable
-          IP_COUNTS: !Ref IpCountTable
 
   SiteCountTable:
     Type: AWS::Serverless::SimpleTable

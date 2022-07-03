@@ -3,10 +3,13 @@ import json
 import os
 from dynamodb import dbtable
 
+QUEUE_PARAMETER = 'counters_stack_queue_name'
+
 ## SAM part
 def lambda_incoming_to_sqs_handler(event, context):
   request = event['Records'][0]['cf']['request']
-  process_incoming_request(request, os.environ['QUEUE_NAME'])
+  queueName = retrieveQueueName()
+  process_incoming_request(request, queueName)
 
   return request
 
@@ -21,6 +24,13 @@ def lambda_read_db_data(event, context):
       statusCode: 200,
       body: JSON.stringify(count_data)
   }
+
+def retrieveQueueName():
+  if 'QUEUE_NAME' in os.environ:
+    return os.environ['QUEUE_NAME']
+  return boto3.client('ssm').get_parameter(
+        Name=QUEUE_PARAMETER,
+        WithDecryption=False)['Parameter']['Value']
 
 ## Unit-testable parts
 
