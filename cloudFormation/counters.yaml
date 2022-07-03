@@ -31,6 +31,16 @@ Resources:
       Architectures:
         - x86_64
       AutoPublishAlias: IncomingRequestFunction
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - edgelambda.amazonaws.com
+                - lambda.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
       Policies:
         SQSSendMessagePolicy:
           QueueName: !GetAtt IncomingRequestQueue.QueueName
