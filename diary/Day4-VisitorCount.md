@@ -96,3 +96,11 @@ I ran into problems with a cloudformation stack update when I changed the name o
 Moving on to the function that will read from the database, I find myself replicating the work that I did in my dynamodb class. I knew this was coming, and it's time to deal with it. The problem is that I want to have two different kinds of tables: Those I *create*, for example in testing, and those I *access*, during production and from my app functions. I essentially need Python's version of multiple constructors, so starting to look into that, using [this tutorial as a start](https://realpython.com/python-multiple-constructors/).
 
 Ok I have now separated the construction part into a more general constructor.
+
+At this point my three functions are ready, and what I need to do is integrate their wrappers to the various services and also set up some more integrated testing. In terms of connections, I would need the following:
+
+- My sqs-message-creating function needs to be bound to the cloudfront distribution incoming requests.
+- My sqs-message-consuming function needs to be set up to in fact consume from the appropriate queue.
+- My sqs-counts-reporting function needs to be hooked up to an api endpoint that I can use to read its responses. I'll need to take care how this will interact with my cloudfront cache.
+
+The first of these is done via a [LambdaFunctionAssociation](https://docs.aws.amazon.com/cloudfront/latest/APIReference/API_LambdaFunctionAssociation.html) entry.
