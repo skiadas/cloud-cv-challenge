@@ -25,6 +25,7 @@ Resources:
       Handler: app.lambda_incoming_to_sqs_handler
       Architectures:
         - x86_64
+      AutoPublishAlias: IncomingRequestFunction
       Policies:
         SQSSendMessagePolicy:
           QueueName: !GetAtt IncomingRequestQueue.QueueName
@@ -78,5 +79,3 @@ Outputs:
   IncomingRequestFunction:
     Description: Function to trigger on viewer requests
     Value: !GetAtt IncomingRequestFunction.Arn
-    Export:
-      Name: IncomingRequestFunctionArn
