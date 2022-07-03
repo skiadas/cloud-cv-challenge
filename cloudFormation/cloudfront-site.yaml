@@ -58,9 +58,6 @@ Resources:
           TargetOriginId: !Sub 'S3-${AWS::StackName}-root'
           ViewerProtocolPolicy: 'redirect-to-https'
           ResponseHeadersPolicyId: !Ref ResponseHeadersPolicy
-          LambdaFunctionAssociations:
-            - EventType: viewer-request
-              LambdaFunctionARN: !Ref ViewerRequestLambda
         CustomErrorResponses:
           - ErrorCachingMinTTL: 60
             ErrorCode: 404
@@ -153,3 +150,8 @@ Outputs:
     Value: !Ref CloudFrontDistribution
     Export:
       Name: "skiadas-resume-distribution"
+
+  Dummy:
+    Description: A dummy value so that linter doesn't complain about not using variable
+    Value: !Ref ViewerRequestLambda
+
