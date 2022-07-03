@@ -77,4 +77,4 @@ Resources:
 Outputs:
   IncomingRequestFunction:
     Description: Function to trigger on viewer requests
-    Value: !Ref IncomingRequestFunction
+    Value: !GetAtt IncomingRequestFunction.Arn
