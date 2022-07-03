@@ -76,6 +76,6 @@ Resources:
           Value: resume-skiadas
 
 Outputs:
-  IncomingRequestFunction:
+  IncomingRequestFunctionVersion:
     Description: Function to trigger on viewer requests
-    Value: !GetAtt IncomingRequestFunction.Arn
+    Value: !Ref IncomingRequestFunction.Version
