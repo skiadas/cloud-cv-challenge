@@ -78,3 +78,5 @@ Outputs:
   IncomingRequestFunction:
     Description: Function to trigger on viewer requests
     Value: !GetAtt IncomingRequestFunction.Arn
+    Export:
+      Name: IncomingRequestFunctionArn
