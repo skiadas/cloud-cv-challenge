@@ -49,6 +49,24 @@ Resources:
         - SSMParameterReadPolicy:
             ParameterName: counters_stack_queue_name
 
+  SqsToDynamoDbFunction:
+    Type: AWS::Serverless::Function
+    Name: !Sub '${ResourcePrefix}-sqs-to-dynamodb'
+    Properties:
+      CodeUri: ../app/src
+      Handler: app.lambda_processing_sqs_message
+      Architectures:
+        - x86_64
+      Policies:
+        - SQSPollerPolicy:
+            QueueName: !GetAtt IncomingRequestQueue.QueueName
+      Events:
+        NewSQSMessageEvent:
+          Type: SQS
+          Properties:
+            Queue: !GetAtt IncomingRequestQueue.Arn
+            BatchSize: 1
+
   SiteCountTable:
     Type: AWS::Serverless::SimpleTable
     Properties:
