@@ -104,3 +104,10 @@ At this point my three functions are ready, and what I need to do is integrate t
 - My sqs-counts-reporting function needs to be hooked up to an api endpoint that I can use to read its responses. I'll need to take care how this will interact with my cloudfront cache.
 
 The first of these is done via a [LambdaFunctionAssociation](https://docs.aws.amazon.com/cloudfront/latest/APIReference/API_LambdaFunctionAssociation.html) entry.
+
+The other two should be settable via the Events property of the corresponding functions.
+
+The first function was actually harder than expected. I had to first figure out how to create a Version rather than just a function, which only occurs if I specify an AutoDeployAlias setting. Next I had to specify in the function that its generated role should be able to be assumed by the edgelambda and lambda services. Then I had to give the role assumed by the github actions the permissions to create a [service-linked role](https://aws.amazon.com/blogs/security/introducing-an-easier-way-to-delegate-permissions-to-aws-services-service-linked-roles/). But before all that I had to stop using environment variables and start using SSM parameters, as edgelambda functions are not allow to use environment variables (amongst [numerous other restrictions](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/edge-functions-restrictions.html#lambda-requirements-lambda-function-configuration)).
+
+Now that I finally got my lambda function recognized, I have to now deal with the problem that my function is not properly getting set up. I thought that the [package step](https://docs.aws.amazon.com/cli/latest/reference/cloudformation/package.html) would have taken care of that, but it is clearly not working properly. Turns out the problem was that I was specifying the path in the `Globals` section of the template, and `aws cloudformation package` does not handle that well. There is an [open issue](https://github.com/aws/aws-cli/issues/3376) regarding this. For now I will simply duplicate the CodeUri on each place.
+
