@@ -43,7 +43,7 @@ def process_incoming_request(request, incomingQueue):
   send_to_queue(incomingQueue, message)
 
 def send_to_queue(queue, message):
-  sqs = boto3.client('sqs', region=AWS_REGION)
+  sqs = boto3.client('sqs', region_name=AWS_REGION)
   sqs.send_message(QueueUrl=queue, MessageBody=message)
 
 def process_sqs_message(body):
