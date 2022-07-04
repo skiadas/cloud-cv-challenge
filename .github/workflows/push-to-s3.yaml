@@ -90,6 +90,7 @@ jobs:
           aws-region: us-east-1
       - name: Prepare our CF stack templates
         if: >
+          ${{needs.check-out.outputs.app}} ||
           ${{needs.check-out.outputs.cf}} ||
           ${{needs.check-out.outputs.site}}
         run: >
@@ -99,6 +100,7 @@ jobs:
           --output-template-file packaged.template
       - name: Update our CF stack
         if: >
+          ${{needs.check-out.outputs.app}} ||
           ${{needs.check-out.outputs.cf}} ||
           ${{needs.check-out.outputs.site}}
         run: >
