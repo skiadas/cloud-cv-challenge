@@ -60,8 +60,6 @@ def read_db_data(query):
   }
 
 
-
-
 def get_db_value(tableName, keyName):
     boto3.client('dynamodb').get_item(
         TableName=tableName,
