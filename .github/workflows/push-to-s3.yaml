@@ -71,9 +71,7 @@ jobs:
       - cf-lint
       - app-test
     if: >
-      ${{ always() }} &&
-      !contains(needs.*.result, 'failure') &&
-      !contains(needs.*.result, 'cancelled') &&
+      ${{ !failure() }} && ${{ !cancelled() }} &&
       (${{github.event_name == 'workflow_dispatch'}} ||
       ${{needs.check-out.outputs.app}} ||
       ${{needs.check-out.outputs.site}} ||
