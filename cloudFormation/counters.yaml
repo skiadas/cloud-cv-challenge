@@ -27,6 +27,7 @@ Resources:
     Type: AWS::Serverless::Function
     Name: !Sub '${ResourcePrefix}-lambda'
     Properties:
+      CodeUri: ../app/
       Handler: app.lambda_incoming_to_sqs_handler
       Architectures:
         - x86_64
