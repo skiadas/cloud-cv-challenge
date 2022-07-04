@@ -88,7 +88,7 @@ Resources:
     Type: AWS::Serverless::SimpleTable
     Properties:
       PrimaryKey:
-        Name: count
+        Name: total
         Type: String
       TableName: !Sub '${ResourcePrefix}-TotalCount'
       Tags:
