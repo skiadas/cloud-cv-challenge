@@ -114,3 +114,5 @@ Now that I finally got my lambda function recognized, I have to now deal with th
 Now I have my function properly running, and I am encountering a problem with its permissions, as I need it to access a parameter. I will need to modify its policy settings.
 
 While working on this, my GitHub action was behaving unexpectedly, due to [this issue](https://github.com/actions/runner/issues/491). Namely I was expecting "skipped jobs" from previous steps to be considered as successful for the purposes of triggering the next step, but that's not the default behavior.
+
+I'm still not happy with the end conditional. It should not have triggered on the last run, as my actual conditional checks should not have passed. But
