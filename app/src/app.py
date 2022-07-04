@@ -4,6 +4,7 @@ import os
 from dynamodb import dbtable
 
 QUEUE_PARAMETER = 'counters_stack_queue_name'
+AWS_REGION = 'us-east-1'
 
 ## SAM part
 def lambda_incoming_to_sqs_handler(event, context):
@@ -28,7 +29,7 @@ def lambda_read_db_data(event, context):
 def retrieveQueueName():
   if 'QUEUE_NAME' in os.environ:
     return os.environ['QUEUE_NAME']
-  return boto3.client('ssm').get_parameter(
+  return boto3.client('ssm', region_name=AWS_REGION).get_parameter(
         Name=QUEUE_PARAMETER,
         WithDecryption=False)['Parameter']['Value']
 
@@ -42,7 +43,7 @@ def process_incoming_request(request, incomingQueue):
   send_to_queue(incomingQueue, message)
 
 def send_to_queue(queue, message):
-  sqs = boto3.client('sqs')
+  sqs = boto3.client('sqs', region=AWS_REGION)
   sqs.send_message(QueueUrl=queue, MessageBody=message)
 
 def process_sqs_message(body):
