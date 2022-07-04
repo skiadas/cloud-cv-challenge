@@ -44,10 +44,10 @@ Resources:
             Action:
               - 'sts:AssumeRole'
       Policies:
-        SQSSendMessagePolicy:
-          QueueName: !GetAtt IncomingRequestQueue.QueueName
-        SSMParameterReadPolicy:
-          ParameterName: counters_stack_queue_name
+        - SQSSendMessagePolicy:
+            QueueName: !GetAtt IncomingRequestQueue.QueueName
+        - SSMParameterReadPolicy:
+            ParameterName: counters_stack_queue_name
 
   SiteCountTable:
     Type: AWS::Serverless::SimpleTable
