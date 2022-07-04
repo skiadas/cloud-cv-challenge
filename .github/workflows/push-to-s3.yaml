@@ -71,11 +71,13 @@ jobs:
       - cf-lint
       - app-test
     if: >
-      ${{ always() }} ||
-      ${{github.event_name == 'workflow_dispatch'}} ||
+      ${{ always() }} &&
+      !contains(needs.*.result, 'failure') &&
+      !contains(needs.*.result, 'cancelled') &&
+      (${{github.event_name == 'workflow_dispatch'}} ||
       ${{needs.check-out.outputs.app}} ||
       ${{needs.check-out.outputs.site}} ||
-      ${{needs.check-out.outputs.cf}}
+      ${{needs.check-out.outputs.cf}})
     env:
       ROLE: ${{ secrets.AWS_ROLE }}
       BUCKET: ${{ secrets.BUCKET_NAME }}
