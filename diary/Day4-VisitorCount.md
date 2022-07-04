@@ -111,3 +111,4 @@ The first function was actually harder than expected. I had to first figure out 
 
 Now that I finally got my lambda function recognized, I have to now deal with the problem that my function is not properly getting set up. I thought that the [package step](https://docs.aws.amazon.com/cli/latest/reference/cloudformation/package.html) would have taken care of that, but it is clearly not working properly. Turns out the problem was that I was specifying the path in the `Globals` section of the template, and `aws cloudformation package` does not handle that well. There is an [open issue](https://github.com/aws/aws-cli/issues/3376) regarding this. For now I will simply duplicate the CodeUri on each place.
 
+Now I have my function properly running, and I am encountering a problem with its permissions, as I need it to access a parameter. I will need to modify its policy settings.
