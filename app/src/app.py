@@ -3,7 +3,8 @@ import json
 import os
 from dynamodb import dbtable
 
-QUEUE_PARAMETER = 'counters_stack_queue_name'
+QUEUE_PARAMETER = '/skiadas/resume/counters/request_queue_name'
+TOTALS_TABLE_PARAMETER = '/skiadas/resume/counters/totals_table_name'
 AWS_REGION = 'us-east-1'
 
 ## SAM part
@@ -29,9 +30,7 @@ def lambda_read_db_data(event, context):
 def retrieveQueueName():
   if 'QUEUE_NAME' in os.environ:
     return os.environ['QUEUE_NAME']
-  return boto3.client('ssm', region_name=AWS_REGION).get_parameter(
-        Name=QUEUE_PARAMETER,
-        WithDecryption=False)['Parameter']['Value']
+  return get_ssm_parameter(QUEUE_PARAMETER)
 
 ## Unit-testable parts
 
@@ -50,13 +49,13 @@ def process_sqs_message(body):
   d = json.loads(body)
   dbtable(os.environ['SITE_COUNTS'], 'path').increaseCount(d['path'])
   dbtable(os.environ['IP_COUNTS'], 'ip').increaseCount(d['ip'])
-  dbtable(os.environ['TOTAL_COUNT'], 'total').increaseCount('total')
+  dbtable(get_totals_table_name(), 'total').increaseCount('total')
 
 def read_db_data(query):
   return {
       'ip': dbtable(os.environ['IP_COUNTS'], 'ip').get(query['ip']),
       'path': dbtable(os.environ['SITE_COUNTS'], 'path').get(query['path']),
-      'total': dbtable(os.environ['TOTAL_COUNT'], 'total').get('total')
+      'total': dbtable(get_totals_table_name(), 'total').get('total')
   }
 
 
@@ -67,3 +66,14 @@ def get_db_value(tableName, keyName):
         UpdateExpression='ADD #c :n',
         ExpressionAttributeNames={'#c': 'count'},
         ExpressionAttributeValues={':n': {'N': '1'}})
+
+def get_ssm_parameter(parameterName):
+  ssm = boto3.client('ssm', region_name=AWS_REGION)
+  return ssm.get_parameter(
+      Name=parameterName,
+      WithDecryption=False)['Parameter']['Value']
+
+def get_totals_table_name():
+  if 'TOTAL_COUNT' in os.environ:
+    return os.environ['TOTAL_COUNT']
+  return get_ssm_parameter(TOTALS_TABLE_PARAMETER)

@@ -16,13 +16,20 @@ Globals:
     # CodeUri: ../app/src
 
 Resources:
-  BasicParameter:
+  QueueNameParameter:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: counters_stack_queue_name
+      Name: '/skiadas/resume/counters/request_queue_name'
       Type: String
       Value: !Sub '${ResourcePrefix}-incoming-request-queue'
       Description: SSM Parameter for the queue name
+  TotalsTableParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: '/skiadas/resume/counters/totals_table_name'
+      Type: String
+      Value: !Ref TotalCountTable
+      Description: The name of the totals table
 
   IncomingRequestFunction:
     Type: AWS::Serverless::Function
@@ -90,7 +97,6 @@ Resources:
       PrimaryKey:
         Name: total
         Type: String
-      TableName: !Sub '${ResourcePrefix}-TotalCount'
       Tags:
         project: resume-skiadas
 
