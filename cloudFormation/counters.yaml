@@ -54,7 +54,7 @@ Resources:
         - SQSSendMessagePolicy:
             QueueName: !GetAtt IncomingRequestQueue.QueueName
         - SSMParameterReadPolicy:
-            ParameterName: '/skiadas/resume/counters/request_queue_name'
+            ParameterName: 'skiadas/resume/counters/request_queue_name'
 
   SqsToDynamoDbFunction:
     Type: AWS::Serverless::Function
