@@ -5,7 +5,7 @@ from boto3 import client
 class dbtable:
     @classmethod
     def create(cls, tableName, keyName):
-      obj = cls(tableName, keyName)
+      obj = cls(tableName, keyName, regionName='us-east-1')
       obj.dynamodb.create_table(
           TableName=tableName,
           AttributeDefinitions=[
@@ -14,8 +14,8 @@ class dbtable:
           BillingMode='PAY_PER_REQUEST')
       return obj
 
-    def __init__(self, tableName, keyName):
-        self.dynamodb = client('dynamodb')
+    def __init__(self, tableName, keyName, regionName='us-east-1'):
+        self.dynamodb = client('dynamodb', region_name=regionName)
         self.tableName = tableName
         self.keyName = keyName
 
