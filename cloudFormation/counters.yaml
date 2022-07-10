@@ -30,6 +30,20 @@ Resources:
       Type: String
       Value: !Ref TotalCountTable
       Description: The name of the totals table
+  PathsTableParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: '/skiadas/resume/counters/paths_table_name'
+      Type: String
+      Value: !Ref SiteCountTable
+      Description: The name of the table holding paths counts
+  IpCountTableParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: '/skiadas/resume/counters/ips_table_name'
+      Type: String
+      Value: !Ref IpCountTable
+      Description: The name of the table holding ip counts
 
   IncomingRequestFunction:
     Type: AWS::Serverless::Function
@@ -75,10 +89,6 @@ Resources:
           Properties:
             Queue: !GetAtt IncomingRequestQueue.Arn
             BatchSize: 1
-      Environment:
-        Variables:
-          'SITE_COUNTS': !Sub '${ResourcePrefix}-PathCounts'
-          'IP_COUNTS': !Sub '${ResourcePrefix}-IpCounts'
 
   SiteCountTable:
     Type: AWS::Serverless::SimpleTable
@@ -86,7 +96,6 @@ Resources:
       PrimaryKey:
         Name: path
         Type: String
-      TableName: !Sub '${ResourcePrefix}-PathCounts'
       Tags:
         project: resume-skiadas
 
@@ -105,7 +114,6 @@ Resources:
       PrimaryKey:
         Name: ip
         Type: String
-      TableName: !Sub '${ResourcePrefix}-IpCounts'
       Tags:
         project: resume-skiadas
 

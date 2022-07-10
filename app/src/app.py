@@ -5,6 +5,8 @@ from dynamodb import dbtable
 
 QUEUE_PARAMETER = '/skiadas/resume/counters/request_queue_name'
 TOTALS_TABLE_PARAMETER = '/skiadas/resume/counters/totals_table_name'
+PATHS_TABLE_PARAMETER = '/skiadas/resume/counters/paths_table_name'
+IPS_TABLE_PARAMETER = '/skiadas/resume/counters/ips_table_name'
 AWS_REGION = 'us-east-1'
 
 ## SAM part
@@ -47,14 +49,14 @@ def send_to_queue(queue, message):
 
 def process_sqs_message(body):
   d = json.loads(body)
-  dbtable(os.environ['SITE_COUNTS'], 'path').increaseCount(d['path'])
-  dbtable(os.environ['IP_COUNTS'], 'ip').increaseCount(d['ip'])
+  dbtable(get_paths_table_name(), 'path').increaseCount(d['path'])
+  dbtable(get_ips_table_name(), 'ip').increaseCount(d['ip'])
   dbtable(get_totals_table_name(), 'total').increaseCount('total')
 
 def read_db_data(query):
   return {
-      'ip': dbtable(os.environ['IP_COUNTS'], 'ip').get(query['ip']),
-      'path': dbtable(os.environ['SITE_COUNTS'], 'path').get(query['path']),
+      'ip': dbtable(get_ips_table_name(), 'ip').get(query['ip']),
+      'path': dbtable(get_paths_table_name(), 'path').get(query['path']),
       'total': dbtable(get_totals_table_name(), 'total').get('total')
   }
 
@@ -77,3 +79,13 @@ def get_totals_table_name():
   if 'TOTAL_COUNT' in os.environ:
     return os.environ['TOTAL_COUNT']
   return get_ssm_parameter(TOTALS_TABLE_PARAMETER)
+
+def get_ips_table_name():
+  if 'IP_COUNTS' in os.environ:
+    return os.environ['IP_COUNTS']
+  return get_ssm_parameter(IPS_TABLE_PARAMETER)
+
+def get_paths_table_name():
+  if 'SITE_COUNTS' in os.environ:
+    return os.environ['SITE_COUNTS']
+  return get_ssm_parameter(PATHS_TABLE_PARAMETER)

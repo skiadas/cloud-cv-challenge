@@ -116,3 +116,5 @@ Now I have my function properly running, and I am encountering a problem with it
 While working on this, my GitHub action was behaving unexpectedly, due to [this issue](https://github.com/actions/runner/issues/491). Namely I was expecting "skipped jobs" from previous steps to be considered as successful for the purposes of triggering the next step, but that's not the default behavior.
 
 I'm still not happy with the end conditional. It should not have triggered on the last run, as my actual conditional checks should not have passed. But moving on for now, I am ready to implement the other two functions by binding them to a SQS event and an API respectively.
+
+The second function is reasonably ready, but in the process I found out the challenges related to specifying the names of resources, as the script can no longer update/replace them in some cases (e.g. databases). So at the moment I have a table that will be recreated if something changes in it, and I need to figure out how to migrate its data.
