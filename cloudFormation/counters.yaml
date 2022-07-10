@@ -83,6 +83,8 @@ Resources:
             QueueName: !GetAtt IncomingRequestQueue.QueueName
         - DynamoDBCrudPolicy:
             TableName: !Sub '${ResourcePrefix}-*'
+        - SSMParameterReadPolicy:
+            ParameterName: 'skiadas/resume/counters/*'
       Events:
         NewSQSMessageEvent:
           Type: SQS
