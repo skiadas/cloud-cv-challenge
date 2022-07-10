@@ -79,7 +79,6 @@ Resources:
         Variables:
           'SITE_COUNTS': !Sub '${ResourcePrefix}-PathCounts'
           'IP_COUNTS': !Sub '${ResourcePrefix}-IpCounts'
-          'TOTAL_COUNT': !Sub '${ResourcePrefix}-TotalCount'
 
   SiteCountTable:
     Type: AWS::Serverless::SimpleTable
