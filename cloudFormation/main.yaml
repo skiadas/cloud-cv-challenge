@@ -100,6 +100,7 @@ Resources:
       TemplateURL: ./counters.yaml
       Parameters:
         ResourcePrefix: skiadas-resume
+        ParameterBucketPrefix: /skiadas/resume/counters
       Tags:
         - Key: project
           Value: resume-skiadas

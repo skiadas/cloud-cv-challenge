@@ -3,10 +3,11 @@ import json
 import os
 from dynamodb import dbtable
 
-QUEUE_PARAMETER = '/skiadas/resume/counters/request_queue_name'
-TOTALS_TABLE_PARAMETER = '/skiadas/resume/counters/totals_table_name'
-PATHS_TABLE_PARAMETER = '/skiadas/resume/counters/paths_table_name'
-IPS_TABLE_PARAMETER = '/skiadas/resume/counters/ips_table_name'
+BUCKET_PREFIX = os.getenv('BUCKET_PREFIX', '/skiadas/resume/counters')
+QUEUE_PARAMETER = BUCKET_PREFIX + '/request_queue_name'
+TOTALS_TABLE_PARAMETER = BUCKET_PREFIX + '/totals_table_name'
+PATHS_TABLE_PARAMETER = BUCKET_PREFIX + '/paths_table_name'
+IPS_TABLE_PARAMETER = BUCKET_PREFIX + '/ips_table_name'
 AWS_REGION = 'us-east-1'
 
 ## SAM part

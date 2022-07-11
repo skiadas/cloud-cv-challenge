@@ -8,6 +8,11 @@ Parameters:
     Type: String
     Default: test-resume
     AllowedPattern: ^[a-zA-Z\-\_0-9]+$
+  ParameterBucketPrefix:
+    Description: Prefix used for parameter bucket names
+    Type: String
+    Default: /skiadas/test-resume/counters
+    AllowedPattern: ^/(([\w-]+)/)*([\w-]+)$
 
 Globals:
   Function:
@@ -19,28 +24,28 @@ Resources:
   QueueNameParameter:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: '/skiadas/resume/counters/request_queue_name'
+      Name: !Sub '${ParameterBucketPrefix}/request_queue_name'
       Type: String
       Value: !Sub '${ResourcePrefix}-incoming-request-queue'
       Description: SSM Parameter for the queue name
   TotalsTableParameter:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: '/skiadas/resume/counters/totals_table_name'
+      Name: !Sub '${ParameterBucketPrefix}/totals_table_name'
       Type: String
       Value: !Ref TotalCountTable
       Description: The name of the totals table
   PathsTableParameter:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: '/skiadas/resume/counters/paths_table_name'
+      Name: !Sub '${ParameterBucketPrefix}/paths_table_name'
       Type: String
       Value: !Ref SiteCountTable
       Description: The name of the table holding paths counts
   IpCountTableParameter:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: '/skiadas/resume/counters/ips_table_name'
+      Name: !Sub '${ParameterBucketPrefix}/ips_table_name'
       Type: String
       Value: !Ref IpCountTable
       Description: The name of the table holding ip counts
