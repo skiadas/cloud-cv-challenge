@@ -1,0 +1,68 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Test stack to learn about the API settings
+Transform: AWS::Serverless-2016-10-31
+
+Resources:
+  APIGatewayRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Action:
+              - 'sts:AssumeRole'
+            Effect: Allow
+            Principal:
+              Service:
+                - apigateway.amazonaws.com
+      Policies:
+        - PolicyName: APIGatewayDynamoDBPolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'dynamodb:PutItem'
+                  - 'dynamodb:Query'
+                  - 'dynamodb:DescribeTable'
+                # Including * in the resource Arn allows access to the DynamoDB table and indexes
+                Resource: !Sub
+                  - '${varTableArn}*'
+                  - varTableArn: !GetAtt TestTable.Arn
+  TestTable:
+    Type: AWS::Serverless::SimpleTable
+    Properties:
+      PrimaryKey:
+        Name: name
+        Type: String
+      Tags:
+        project: test-resume-skiadas
+  TestApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      DefinitionBody:
+        Fn::Transform:
+          Name: AWS::Include
+          Parameters:
+            Location: ../app/countsApi.yaml
+      StageName: prod
+      Tags:
+        project: test-resume-skiadas
+
+# Using OpenAPI instead, via DefinitionBody
+  # VisitResource:
+  #   Type: AWS::ApiGateway::Resource
+  #   Properties:
+  #     ParentId: !GetAtt TestApi.RootResourceId
+  #     PathPart: visit
+  #     RestApiId: !Ref TestApi
+
+  # VisitTotalGet:
+  #   Type: AWS::ApiGateway::Method
+  #   Properties:
+  #     HttpMethod: GET
+  #     RestApiId: !Ref TestApi
+  #     ResourceId: !Ref VisitResource
+  #     AuthorizationType: NONE
+  #     Integration:
+  #       Type: MOCK

@@ -1,0 +1,49 @@
+openapi: 3.0.0
+info:
+  version: 1.0.0
+  title: Visits API
+paths:
+  /visit:
+    get:
+      summary: Get total visit count
+      description: Something useful here
+      # parameters:
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: integer
+                minimum: 0
+      x-amazon-apigateway-integration:
+        type: aws
+        httpMethod: POST
+        passthroughBehavior: when_no_templates
+        uri:
+          Fn::Sub:
+            - 'arn:aws:apigateway:${Region}:dynamodb:action/DescribeTable'
+            - Region:
+                Ref: AWS::Region
+        credentials:
+          Fn::GetAtt:
+            - APIGatewayRole
+            - Arn
+        requestTemplates:
+          application/json:
+            Fn::Sub:
+              - "{\"TableName\":\"${TestTable}\"}"
+              - TestTable:
+                  Ref: TestTable
+        # requestParameters:
+          # integration.request.path.petId: method.request.path.petId
+        responses:
+          default:
+            statusCode: "200"
+            responseTemplates:
+              # Modify the response of the DynamoDB Query before sending back to the caller
+              # Using single-line Velocity Template Language (VTL) code as the mapping template
+              # \n represents a new line, \t represents a tab character, \" represents a single quote character
+              # Example response: {"music":[{"id":"38bfb57e-a5a8-4fed-9a4f-391d66d5e987","artist":"The Beatles","album":"Abbey Road"}]}
+              application/json: "#set($inputRoot = $input.path('$'))\n{\n\t\"total\": $inputRoot.Table.ItemCount \n}"
+
