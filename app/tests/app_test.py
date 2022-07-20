@@ -1,7 +1,7 @@
 import json
 # from client import get_client
 from moto import mock_sqs, mock_dynamodb
-from app import process_incoming_request, process_sqs_message, read_db_data
+from app import process_incoming_request, process_sqs_message, read_db_data, encode_query_string
 from sqs_queue import sqs_queue
 from dynamodb import dbtable
 import pytest
@@ -44,6 +44,10 @@ def test_data_retrieval(aws_credentials, table_names):
     ip_table.setCount('203.123.111.3', 2)
     total_table.setCount('total', 3)
     assert read_db_data({'ip': '203.123.111.3', 'path': '/site' }) == { 'total': 3, 'ip': 2, 'path': 1}
+
+def test_query_string_from_obj(query_string):
+    expected = "?ID=42&NoValue=&querymv=val1&querymv=val2"
+    assert encode_query_string(query_string) == expected
 
 @pytest.fixture(scope='function')
 def aws_credentials():
@@ -95,6 +99,24 @@ def request_cf():
       "uri": "/"
     }
     '''
+
+@pytest.fixture(scope="function")
+def query_string():
+  return {
+      "ID": { "value": "42" },
+      "NoValue": { "value": "" },
+      "querymv": {
+        "value": "val1",
+        "multiValue": [
+          {
+            "value": "val1"
+          },
+          {
+            "value": "val2"
+          }
+        ]
+      }
+  }
 
 # This all belongs somewhere else
 # As part of some integration tests

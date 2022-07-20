@@ -1,8 +1,14 @@
 import boto3
 import json
 import os
+import secrets
+from datetime import datetime, timedelta
+from urllib.parse import urlencode
+
 from dynamodb import dbtable
 
+DATE_FORMAT = '%a, %d %b %Y %H:%M:%S GMT'
+SESSIONID_NAME = 'SKIADAS_RESUME_SESSION'
 BUCKET_PREFIX = os.getenv('BUCKET_PREFIX', '/skiadas/resume/counters')
 QUEUE_PARAMETER = BUCKET_PREFIX + '/request_queue_name'
 TOTALS_TABLE_PARAMETER = BUCKET_PREFIX + '/totals_table_name'
@@ -13,6 +19,9 @@ AWS_REGION = 'us-east-1'
 ## SAM part
 def lambda_incoming_to_sqs_handler(event, context):
   request = event['Records'][0]['cf']['request']
+  currentSession = get_current_session_id(request)
+  if currentSession is None:
+    return redirect_with_new_session(request)
   queueName = retrieveQueueName()
   process_incoming_request(request, queueName)
 
@@ -26,8 +35,8 @@ def lambda_read_db_data(event, context):
   query = event['queryStringParameters']
   count_data = read_db_data(query)
   return {
-      statusCode: 200,
-      body: JSON.stringify(count_data)
+      'statusCode': 200,
+      'body': JSON.stringify(count_data)
   }
 
 def retrieveQueueName():
@@ -36,6 +45,46 @@ def retrieveQueueName():
   return get_ssm_parameter(QUEUE_PARAMETER)
 
 ## Unit-testable parts
+
+
+def redirect_with_new_session(request):
+  return {
+    "statusCode": 302,
+    'headers': {
+      'location': {
+        'value': 'https://' + request['headers']['host'] +
+                              request['uri'] +
+                              encode_query_string(request['querystring'])
+      }
+    },
+    "cookies": {
+      SESSIONID_NAME: {
+        "value": generate_session_id(),
+        "attributes": "Expires=" + expire_date(2 * 60)
+      }
+    }
+  }
+
+def generate_session_id():
+  return secrets.token_urlsafe(16)
+
+def expire_date(minutesFromNow):
+  return DATE_FORMAT.format(datetime.now() + timedelta(minutes=minutesFromNow))
+
+def encode_query_string(q_obj):
+  tuples = [(k, _get_query_values(v)) for k, v in q_obj.items()]
+  return "?" + urlencode(tuples, doseq=True)
+
+def _get_query_values(v):
+  if 'multiValue' in v:
+    return [x['value'] for x in v['multiValue']]
+  return v['value']
+
+def get_current_session_id(request):
+    cookies = request['cookies']
+    if SESSIONID_NAME in cookies:
+      return cookies[SESSIONID_NAME]['value']
+    return None
 
 def process_incoming_request(request, incomingQueue):
   message = json.dumps({
