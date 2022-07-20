@@ -19,9 +19,9 @@ AWS_REGION = 'us-east-1'
 ## SAM part
 def lambda_incoming_to_sqs_handler(event, context):
   request = event['Records'][0]['cf']['request']
-  currentSession = get_current_session_id(request)
-  if currentSession is None:
-    return redirect_with_new_session(request)
+  # currentSession = get_current_session_id(request)
+  # if currentSession is None:
+  #   return redirect_with_new_session(request)
   queueName = retrieveQueueName()
   process_incoming_request(request, queueName)
 
