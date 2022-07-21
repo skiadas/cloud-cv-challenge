@@ -13,6 +13,17 @@ Parameters:
     Type: String
     Default: skiadas/test-resume/counters
     AllowedPattern: ^(([\w-]+)/)*([\w-]+)$
+  EnvType:
+    Description: Environment type.
+    Default: test
+    Type: String
+    AllowedValues:
+      - prod
+      - test
+    ConstraintDescription: must specify prod or test.
+
+Conditions:
+  CreateProdResources: !Equals [!Ref EnvType, prod]
 
 Globals:
   Function:
@@ -55,7 +66,11 @@ Resources:
     Name: !Sub '${ResourcePrefix}-lambda'
     Properties:
       CodeUri: ../app/src
-      Handler: app.lambda_incoming_to_sqs_handler
+      Handler:
+        Fn::If:
+          - CreateProdResources
+          - app.lambda_incoming_to_sqs_handler
+          - app.lambda_incoming_to_sqs_handler_dev
       Architectures:
         - x86_64
       AutoPublishAlias: IncomingRequestFunction

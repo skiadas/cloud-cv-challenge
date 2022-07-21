@@ -7,22 +7,33 @@ from urllib.parse import urlencode
 
 from dynamodb import dbtable
 
+PROD_BUCKET = '/skiadas/resume/counters'
+DEV_BUCKET = '/dev-skiadas/resume/counters'
 DATE_FORMAT = '%a, %d %b %Y %H:%M:%S GMT'
 SESSIONID_NAME = 'SKIADAS_RESUME_SESSION'
-BUCKET_PREFIX = os.getenv('BUCKET_PREFIX', '/skiadas/resume/counters')
-QUEUE_PARAMETER = BUCKET_PREFIX + '/request_queue_name'
-TOTALS_TABLE_PARAMETER = BUCKET_PREFIX + '/totals_table_name'
-PATHS_TABLE_PARAMETER = BUCKET_PREFIX + '/paths_table_name'
-IPS_TABLE_PARAMETER = BUCKET_PREFIX + '/ips_table_name'
+BUCKET_PREFIX = os.getenv('BUCKET_PREFIX', PROD_BUCKET)
+QUEUE_PARAMETER = '/request_queue_name'
+TOTALS_TABLE_PARAMETER = '/totals_table_name'
+PATHS_TABLE_PARAMETER = '/paths_table_name'
+IPS_TABLE_PARAMETER = '/ips_table_name'
 AWS_REGION = 'us-east-1'
 
 ## SAM part
+
 def lambda_incoming_to_sqs_handler(event, context):
+  return lambda_incoming_to_sqs_handler_inner(event, context, '/skiadas/resume/counters')
+
+# Version of the handler for a live dev version
+# Needed because we cannot alter the bucket otherwise
+def lambda_incoming_to_sqs_handler_dev(event, context):
+  return lambda_incoming_to_sqs_handler_inner(event, context, '/dev-skiadas/resume/counters')
+
+def lambda_incoming_to_sqs_handler_inner(event, context, bucketPrefix):
   request = event['Records'][0]['cf']['request']
   # currentSession = get_current_session_id(request)
   # if currentSession is None:
   #   return redirect_with_new_session(request)
-  queueName = retrieveQueueName()
+  queueName = retrieveQueueName(bucketPrefix)
   process_incoming_request(request, queueName)
 
   return request
@@ -39,13 +50,12 @@ def lambda_read_db_data(event, context):
       'body': JSON.stringify(count_data)
   }
 
-def retrieveQueueName():
+def retrieveQueueName(bucketPrefix):
   if 'QUEUE_NAME' in os.environ:
     return os.environ['QUEUE_NAME']
-  return get_ssm_parameter(QUEUE_PARAMETER)
+  return get_ssm_parameter(QUEUE_PARAMETER, bucketPrefix)
 
 ## Unit-testable parts
-
 
 def redirect_with_new_session(request):
   return {
@@ -119,10 +129,10 @@ def get_db_value(tableName, keyName):
         ExpressionAttributeNames={'#c': 'count'},
         ExpressionAttributeValues={':n': {'N': '1'}})
 
-def get_ssm_parameter(parameterName):
+def get_ssm_parameter(parameterName, bucketPrefix=PROD_BUCKET):
   ssm = boto3.client('ssm', region_name=AWS_REGION)
   return ssm.get_parameter(
-      Name=parameterName,
+      Name=bucketPrefix + parameterName,
       WithDecryption=False)['Parameter']['Value']
 
 def get_totals_table_name():

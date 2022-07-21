@@ -145,6 +145,7 @@ Resources:
             - CreateProdResources
             - skiadas/resume/counters
             - dev-skiadas/resume/counters
+        EnvType: !Ref EnvType
       Tags:
         - Key: project
           Value: resume-skiadas
