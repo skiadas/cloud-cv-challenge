@@ -73,7 +73,7 @@ Resources:
         - SQSSendMessagePolicy:
             QueueName: !GetAtt IncomingRequestQueue.QueueName
         - SSMParameterReadPolicy:
-            ParameterName: 'skiadas/resume/counters/request_queue_name'
+            ParameterName: !Sub '${ParameterBucketPrefix}/request_queue_name'
 
   SqsToDynamoDbFunction:
     Type: AWS::Serverless::Function
@@ -89,7 +89,7 @@ Resources:
         - DynamoDBCrudPolicy:
             TableName: !Sub '${ResourcePrefix}-*'
         - SSMParameterReadPolicy:
-            ParameterName: 'skiadas/resume/counters/*'
+            ParameterName: '${ParameterBucketPrefix}/*'
       Events:
         NewSQSMessageEvent:
           Type: SQS

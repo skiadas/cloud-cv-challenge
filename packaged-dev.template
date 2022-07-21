@@ -120,6 +120,8 @@ Resources:
           Fn::GetAtt:
           - CountersStack
           - Outputs.IncomingRequestFunctionVersion
+        EnvType:
+          Ref: EnvType
       Tags:
       - Key: project
         Value: resume-skiadas
@@ -135,13 +137,15 @@ Resources:
         Type: A
         AliasTarget:
           DNSName:
-            Fn::Sub: ${SubDomain}.${DomainName}
+            Fn::GetAtt:
+            - CloudFrontStack
+            - Outputs.CloudFrontDistribution
           EvaluateTargetHealth: false
           HostedZoneId: Z2FDTNDATAQYW2
   CountersStack:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: https://s3.us-east-1.amazonaws.com/skiadas-resume-templates/deeb24452a3133a3ea4445e8b2ef3f85.template
+      TemplateURL: https://s3.us-east-1.amazonaws.com/skiadas-resume-templates/1fcb3fb6bf3dc4ddcb39f97ebd635d7e.template
       Parameters:
         ResourcePrefix:
           Fn::If:
