@@ -1,7 +1,7 @@
 import json
 # from client import get_client
 from moto import mock_sqs, mock_dynamodb
-from app import process_incoming_request, process_sqs_message, read_db_data, encode_query_string
+import app
 from sqs_queue import sqs_queue
 from dynamodb import dbtable
 import pytest
@@ -12,7 +12,7 @@ QUEUE_NAME = 'test-queue'
 @mock_sqs
 def test_record_to_queue(aws_credentials, request_cf):
   queue = sqs_queue(QUEUE_NAME)
-  process_incoming_request(json.loads(request_cf), queue.get_url())
+  app.process_incoming_request(json.loads(request_cf), queue.get_url())
   # Verify SQS called
   assert queue.get_attribute('ApproximateNumberOfMessages') == '1'
   expected_json = { "ip": "203.0.113.178", "path": "/" }
@@ -23,9 +23,9 @@ def test_sqs_message_updates_db(aws_credentials, table_names):
   path_table = dbtable.create(table_names['SITE_COUNTS'], 'path')
   ip_table = dbtable.create(table_names['IP_COUNTS'], 'ip')
   total_table = dbtable.create(table_names['TOTAL_COUNT'], 'total')
-  process_sqs_message("{ \"ip\": \"203.0.113.178\", \"path\": \"/\" }")
-  process_sqs_message("{ \"ip\": \"203.0.113.178\", \"path\": \"/home\" }")
-  process_sqs_message("{ \"ip\": \"203.0.113.174\", \"path\": \"/\" }")
+  app.process_sqs_message("{ \"ip\": \"203.0.113.178\", \"path\": \"/\" }")
+  app.process_sqs_message("{ \"ip\": \"203.0.113.178\", \"path\": \"/home\" }")
+  app.process_sqs_message("{ \"ip\": \"203.0.113.174\", \"path\": \"/\" }")
   assert path_table.get("/") == 2
   assert path_table.get("/home") == 1
   assert path_table.entries_count() == 2
@@ -43,11 +43,27 @@ def test_data_retrieval(aws_credentials, table_names):
     path_table.setCount('/site', 1)
     ip_table.setCount('203.123.111.3', 2)
     total_table.setCount('total', 3)
-    assert read_db_data({'ip': '203.123.111.3', 'path': '/site' }) == { 'total': 3, 'ip': 2, 'path': 1}
+    assert app.read_db_data({'ip': '203.123.111.3', 'path': '/site' }) == { 'total': 3, 'ip': 2, 'path': 1}
 
 def test_query_string_from_obj(query_string):
     expected = "?ID=42&NoValue=&querymv=val1&querymv=val2"
-    assert encode_query_string(query_string) == expected
+    assert app.encode_query_string(query_string) == expected
+
+def test_redirect_with_new_session(request_cf):
+  requestJson = json.loads(request_cf)
+  result = app.redirect_with_new_session(requestJson)
+  assert result['statusCode'] == '302'
+  assert result['headers']['location']['value'] is not None
+  assert result['cookies'][app.SESSIONID_NAME] is not None
+
+
+def test_redirect_with_new_session_with_empty_querystring(request_cf):
+  requestJson = json.loads(request_cf)
+  requestJson['querystring'] = ""
+  result = app.redirect_with_new_session(requestJson)
+  assert result['statusCode'] == '302'
+  assert result['headers']['location']['value'] is not None
+  assert result['cookies'][app.SESSIONID_NAME] is not None
 
 @pytest.fixture(scope='function')
 def aws_credentials():
@@ -95,7 +111,21 @@ def request_cf():
         ]
       },
       "method": "GET",
-      "querystring": "",
+      "querystring": {
+        "ID": { "value": "42" },
+        "NoValue": { "value": "" },
+        "querymv": {
+          "value": "val1",
+          "multiValue": [
+            {
+              "value": "val1"
+            },
+            {
+              "value": "val2"
+            }
+          ]
+        }
+      },
       "uri": "/"
     }
     '''

@@ -30,9 +30,9 @@ def lambda_incoming_to_sqs_handler_dev(event, context):
 
 def lambda_incoming_to_sqs_handler_inner(event, context, bucketPrefix):
   request = event['Records'][0]['cf']['request']
-  # currentSession = get_current_session_id(request)
-  # if currentSession is None:
-  #   return redirect_with_new_session(request)
+  currentSession = get_current_session_id(request)
+  if currentSession is None:
+    return redirect_with_new_session(request)
   queueName = retrieveQueueName(bucketPrefix)
   process_incoming_request(request, queueName)
 
@@ -46,7 +46,7 @@ def lambda_read_db_data(event, context):
   query = event['queryStringParameters']
   count_data = read_db_data(query)
   return {
-      'statusCode': 200,
+      'statusCode': '200',
       'body': JSON.stringify(count_data)
   }
 
@@ -59,10 +59,10 @@ def retrieveQueueName(bucketPrefix):
 
 def redirect_with_new_session(request):
   return {
-    "statusCode": 302,
-    'headers': {
+    "statusCode": "302",
+    "headers": {
       'location': {
-        'value': 'https://' + request['headers']['host'] +
+        'value': 'https://' + request['headers']['host'][0]['value'] +
                               request['uri'] +
                               encode_query_string(request['querystring'])
       }
@@ -82,6 +82,8 @@ def expire_date(minutesFromNow):
   return DATE_FORMAT.format(datetime.now() + timedelta(minutes=minutesFromNow))
 
 def encode_query_string(q_obj):
+  if q_obj == "":
+    return ""
   tuples = [(k, _get_query_values(v)) for k, v in q_obj.items()]
   return "?" + urlencode(tuples, doseq=True)
 
@@ -91,6 +93,8 @@ def _get_query_values(v):
   return v['value']
 
 def get_current_session_id(request):
+    if 'cookies' not in request:
+      return None
     cookies = request['cookies']
     if SESSIONID_NAME in cookies:
       return cookies[SESSIONID_NAME]['value']
