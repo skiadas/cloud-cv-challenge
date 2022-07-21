@@ -143,8 +143,8 @@ Resources:
         ParameterBucketPrefix:
           Fn::If:
             - CreateProdResources
-            - /skiadas/resume/counters
-            - /dev-skiadas/resume/counters
+            - skiadas/resume/counters
+            - dev-skiadas/resume/counters
       Tags:
         - Key: project
           Value: resume-skiadas
