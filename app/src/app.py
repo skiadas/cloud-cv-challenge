@@ -61,11 +61,11 @@ def redirect_with_new_session(request):
   return {
     "statusCode": "302",
     "headers": {
-      'location': {
+      'location': [{
         'value': 'https://' + request['headers']['host'][0]['value'] +
                               request['uri'] +
                               encode_query_string(request['querystring'])
-      }
+      }]
     },
     "cookies": {
       SESSIONID_NAME: {

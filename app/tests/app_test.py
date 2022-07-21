@@ -53,7 +53,7 @@ def test_redirect_with_new_session(request_cf):
   requestJson = json.loads(request_cf)
   result = app.redirect_with_new_session(requestJson)
   assert result['statusCode'] == '302'
-  assert result['headers']['location']['value'] is not None
+  assert result['headers']['location'][0]['value'] is not None
   assert result['cookies'][app.SESSIONID_NAME] is not None
 
 
@@ -62,7 +62,7 @@ def test_redirect_with_new_session_with_empty_querystring(request_cf):
   requestJson['querystring'] = ""
   result = app.redirect_with_new_session(requestJson)
   assert result['statusCode'] == '302'
-  assert result['headers']['location']['value'] is not None
+  assert result['headers']['location'][0]['value'] is not None
   assert result['cookies'][app.SESSIONID_NAME] is not None
 
 @pytest.fixture(scope='function')
