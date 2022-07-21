@@ -145,7 +145,7 @@ Resources:
   CountersStack:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: https://s3.us-east-1.amazonaws.com/skiadas-resume-templates/1fcb3fb6bf3dc4ddcb39f97ebd635d7e.template
+      TemplateURL: https://s3.us-east-1.amazonaws.com/skiadas-resume-templates/1a341b20dc863e023254a41a5f1e1592.template
       Parameters:
         ResourcePrefix:
           Fn::If:
@@ -155,8 +155,10 @@ Resources:
         ParameterBucketPrefix:
           Fn::If:
           - CreateProdResources
-          - /skiadas/resume/counters
-          - /dev-skiadas/resume/counters
+          - skiadas/resume/counters
+          - dev-skiadas/resume/counters
+        EnvType:
+          Ref: EnvType
       Tags:
       - Key: project
         Value: resume-skiadas
