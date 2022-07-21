@@ -44,12 +44,25 @@ Parameters:
   DomainName:
     Description: The part of a website address after your SubDomain - e.g. example.com
     Type: String
+    Default: example.com
   HostedZoneId:
     Description: HostedZoneId for the domain e.g. Z23ABC4XYZL05B
     Type: String
+    Default: ""
   BucketName:
     Description: The name of the bucket for the website
     Type: String
+  EnvType:
+    Description: Environment type.
+    Default: test
+    Type: String
+    AllowedValues:
+      - prod
+      - test
+    ConstraintDescription: must specify prod or test.
+
+Conditions:
+  CreateProdResources: !Equals [!Ref EnvType, prod]
 
 # The resources to be used in the stack
 # references other files
@@ -67,6 +80,7 @@ Resources:
   # Create certificate
   AcmCertificateStack:
     Type: AWS::CloudFormation::Stack
+    Condition: CreateProdResources
     Properties:
       TemplateURL: ./acm-certificate.yaml
       Parameters:
@@ -82,9 +96,16 @@ Resources:
     Properties:
       TemplateURL: ./cloudfront-site.yaml
       Parameters:
-        CertificateArn: !GetAtt AcmCertificateStack.Outputs.CertificateArn
-        DomainName: !Ref DomainName
-        SubDomain: !Ref SubDomain
+        CertificateArn:
+          Fn::If:
+            - CreateProdResources
+            - !GetAtt AcmCertificateStack.Outputs.CertificateArn
+            - AWS::NoValue
+        FullName:
+          Fn::If:
+            - CreateProdResources
+            - !Sub '${SubDomain}.${DomainName}'
+            - AWS::NoValue
         S3BucketRoot: !GetAtt BucketStack.Outputs.S3BucketRoot
         S3BucketRootName: !GetAtt BucketStack.Outputs.S3BucketRootName
         S3BucketRootArn: !GetAtt BucketStack.Outputs.S3BucketRootArn
@@ -94,13 +115,35 @@ Resources:
         - Key: project
           Value: resume-skiadas
 
+  Route53RecordSetGroup:
+    Type: AWS::Route53::RecordSetGroup
+    Condition: CreateProdResources
+    Properties:
+      HostedZoneName: !Sub '${DomainName}.'
+      RecordSets:
+      - Name: !Sub '${SubDomain}.${DomainName}'
+        Type: 'A'
+        AliasTarget:
+          DNSName: !Sub '${SubDomain}.${DomainName}'
+          EvaluateTargetHealth: false
+          # The  following HosteZoneId is always used for alias records pointing to CF.
+          HostedZoneId: 'Z2FDTNDATAQYW2'
+
   CountersStack:
     Type: AWS::CloudFormation::Stack
     Properties:
       TemplateURL: ./counters.yaml
       Parameters:
-        ResourcePrefix: skiadas-resume
-        ParameterBucketPrefix: /skiadas/resume/counters
+        ResourcePrefix:
+          Fn::If:
+            - CreateProdResources
+            - skiadas-resume
+            - dev-skiadas-resume
+        ParameterBucketPrefix:
+          Fn::If:
+            - CreateProdResources
+            - /skiadas/resume/counters
+            - /dev-skiadas/resume/counters
       Tags:
         - Key: project
           Value: resume-skiadas
@@ -122,10 +165,12 @@ Outputs:
     Value: !GetAtt BucketStack.Outputs.S3BucketRootName
   CertificateArn:
     Description: Issued certificate
+    Condition: CreateProdResources
     Value: !GetAtt AcmCertificateStack.Outputs.CertificateArn
   CFDistributionName:
     Description: CloudFront distribution
     Value: !GetAtt CloudFrontStack.Outputs.CloudFrontDistribution
   CloudFrontDomainName:
     Description: Website address
-    Value: !GetAtt CloudFrontStack.Outputs.CloudFrontDomainName
+    Condition: CreateProdResources
+    Value: !Sub '${SubDomain}.${DomainName}'

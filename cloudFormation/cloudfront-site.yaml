@@ -6,11 +6,8 @@ Parameters:
   CertificateArn:
     Description: Certificate locater
     Type: String
-  DomainName:
-    Description: Apex domain
-    Type: String
-  SubDomain:
-    Description: Subdomain
+  FullName:
+    Description: The full domain name (subdomain plus domain)
     Type: String
   S3BucketRoot:
     Description: Content Bucket
@@ -27,6 +24,17 @@ Parameters:
   ViewerRequestLambda:
     Description: The Lambda function to work on viewer-requests
     Type: String
+  EnvType:
+    Description: Environment type.
+    Default: test
+    Type: String
+    AllowedValues:
+      - prod
+      - test
+    ConstraintDescription: must specify prod or test.
+
+Conditions:
+  CreateProdResources: !Equals [!Ref EnvType, prod]
 
 Resources:
   S3BucketPolicy:
@@ -48,7 +56,10 @@ Resources:
     Properties:
       DistributionConfig:
         Aliases:
-          - !Sub '${SubDomain}.${DomainName}'
+          Fn::If:
+            - CreateProdResources
+            - [!Ref FullName]
+            - !Ref AWS::NoValue
         DefaultCacheBehavior:
           Compress: true
           DefaultTTL: 86400
@@ -86,9 +97,12 @@ Resources:
                 !Join ['', ['origin-access-identity/cloudfront/', !Ref CloudFrontOriginAccessIdentity]]
         PriceClass: 'PriceClass_100'
         ViewerCertificate:
-          AcmCertificateArn: !Ref 'CertificateArn'
-          MinimumProtocolVersion: 'TLSv1.1_2016'
-          SslSupportMethod: 'sni-only'
+          Fn::If:
+            - CreateProdResources
+            - AcmCertificateArn: !Ref 'CertificateArn'
+              MinimumProtocolVersion: 'TLSv1.1_2016'
+              SslSupportMethod: 'sni-only'
+            - CloudFrontDefaultCertificate: true
       Tags:
         - Key: project
           Value: resume-skiadas
@@ -97,20 +111,7 @@ Resources:
     Type: AWS::CloudFront::CloudFrontOriginAccessIdentity
     Properties:
       CloudFrontOriginAccessIdentityConfig:
-        Comment: !Sub 'CloudFront OAI for ${SubDomain}.${DomainName}'
-
-  Route53RecordSetGroup:
-    Type: AWS::Route53::RecordSetGroup
-    Properties:
-      HostedZoneName: !Sub '${DomainName}.'
-      RecordSets:
-      - Name: !Sub '${SubDomain}.${DomainName}'
-        Type: 'A'
-        AliasTarget:
-          DNSName: !GetAtt 'CloudFrontDistribution.DomainName'
-          EvaluateTargetHealth: false
-          # The  following HosteZoneId is always used for alias records pointing to CF.
-          HostedZoneId: 'Z2FDTNDATAQYW2'
+        Comment: !Sub 'CloudFront OAI for ${FullName}'
 
   ResponseHeadersPolicy:
       Type: AWS::CloudFront::ResponseHeadersPolicy
@@ -144,15 +145,15 @@ Outputs:
     Description: CloudFront distribution domain name
     Value: !GetAtt CloudFrontDistribution.DomainName
 
-  CloudFrontDomainName:
-    Description: Website address
-    Value: !Sub '${SubDomain}.${DomainName}'
-
   CloudFrontDistributionId:
     Description: CloudFront distribution id
     Value: !Ref CloudFrontDistribution
     Export:
-      Name: "skiadas-resume-distribution"
+      Name:
+        Fn::If:
+          - CreateProdResources
+          - "skiadas-resume-distribution"
+          - "skiadas-resume-dev-distribution"
 
   Dummy:
     Description: A dummy value so that linter doesn't complain about not using variable

@@ -114,7 +114,7 @@ jobs:
           --template-file packaged.template
           --capabilities CAPABILITY_NAMED_IAM CAPABILITY_AUTO_EXPAND
           --parameter-overrides SubDomain=$SUBDOMAIN DomainName=$DOMAIN_NAME
-          HostedZoneId=$ZONE_ID BucketName=$BUCKET
+          HostedZoneId=$ZONE_ID BucketName=$BUCKET EnvType=prod
       - name: Sync S3 bucket
         if: ${{needs.check-out.outputs.site}}
         run: aws s3 sync --delete ./site s3://$BUCKET
