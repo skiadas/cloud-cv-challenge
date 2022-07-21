@@ -111,6 +111,7 @@ Resources:
         S3BucketRootArn: !GetAtt BucketStack.Outputs.S3BucketRootArn
         S3BucketLogsName: !GetAtt BucketStack.Outputs.S3BucketLogsName
         ViewerRequestLambda: !GetAtt CountersStack.Outputs.IncomingRequestFunctionVersion
+        EnvType: !Ref EnvType
       Tags:
         - Key: project
           Value: resume-skiadas
