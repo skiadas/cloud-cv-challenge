@@ -124,7 +124,7 @@ Resources:
       - Name: !Sub '${SubDomain}.${DomainName}'
         Type: 'A'
         AliasTarget:
-          DNSName: !Sub '${SubDomain}.${DomainName}'
+          DNSName: !GetAtt CloudFrontStack.Outputs.CloudFrontDistribution
           EvaluateTargetHealth: false
           # The  following HosteZoneId is always used for alias records pointing to CF.
           HostedZoneId: 'Z2FDTNDATAQYW2'
