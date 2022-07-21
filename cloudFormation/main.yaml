@@ -140,11 +140,6 @@ Resources:
             - CreateProdResources
             - skiadas-resume
             - dev-skiadas-resume
-        ParameterBucketPrefix:
-          Fn::If:
-            - CreateProdResources
-            - skiadas/resume/counters
-            - dev-skiadas/resume/counters
         EnvType: !Ref EnvType
       Tags:
         - Key: project

@@ -1,0 +1,43 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Defines names to be used by other stacks
+
+Parameters:
+  ResourcePrefix:
+    Description: A prefix to be used for resource names, useful for separate testing
+    Type: String
+    Default: test-resume
+    AllowedPattern: ^[a-zA-Z\-\_0-9]+$
+  ParameterBucketPrefix:
+    Description: Prefix used for parameter bucket names
+    Type: String
+    Default: skiadas/test-resume/counters
+    AllowedPattern: ^(([\w-]+)/)*([\w-]+)$
+
+Conditions:
+  Never:
+    !Equals [ "A", "B" ]
+
+Resources:
+  NonResource:
+    Type: Custom::NonResource
+    Condition: Never
+
+Outputs:
+  AllParameterNamesForPolicy:
+    Description: Parameter names wildcard description for use in SSM policy
+    Value: !Sub '${ParameterBucketPrefix}/*'
+  QueueNameParameterName:
+    Description: The name of the SSM parameter that holds the name of the queue
+    Value: !Sub '/${ParameterBucketPrefix}/request_queue_name'
+  TotalsTableParameterName:
+    Description: The name of the SSM parameter that holds the name of the totals table
+    Value: !Sub '/${ParameterBucketPrefix}/totals_table_name'
+  PathsTableParameterName:
+    Description: The name of the SSM parameter that holds the name of the paths table
+    Value: !Sub '/${ParameterBucketPrefix}/paths_table_name'
+  IpCountTableParameterName:
+    Description:  The name of the SSM parameter that holds the name of the ip counts table
+    Value: !Sub '/${ParameterBucketPrefix}/ips_table_name'
+  QueueName:
+    Description: The name of the queue
+    Value: !Sub '${ResourcePrefix}-incoming-request-queue'
