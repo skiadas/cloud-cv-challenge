@@ -45,25 +45,34 @@ def test_data_retrieval(aws_credentials, table_names):
     total_table.setCount('total', 3)
     assert app.read_db_data({'ip': '203.123.111.3', 'path': '/site' }) == { 'total': 3, 'ip': 2, 'path': 1}
 
-def test_query_string_from_obj(query_string):
-    expected = "?ID=42&NoValue=&querymv=val1&querymv=val2"
-    assert app.encode_query_string(query_string) == expected
-
 def test_redirect_with_new_session(request_cf):
   requestJson = json.loads(request_cf)
   result = app.redirect_with_new_session(requestJson)
-  assert result['statusCode'] == '302'
+  assert result['status'] == '302'
   assert result['headers']['location'][0]['value'] is not None
-  assert result['cookies'][app.SESSIONID_NAME] is not None
-
+  assert result['headers']['set-cookie'][0]['value'] is not None
 
 def test_redirect_with_new_session_with_empty_querystring(request_cf):
   requestJson = json.loads(request_cf)
   requestJson['querystring'] = ""
   result = app.redirect_with_new_session(requestJson)
-  assert result['statusCode'] == '302'
+  assert result['status'] == '302'
   assert result['headers']['location'][0]['value'] is not None
-  assert result['cookies'][app.SESSIONID_NAME] is not None
+  assert result['headers']['set-cookie'][0]['value'] is not None
+
+def test_parse_cookies():
+  assert app.parse_cookies([]) == {}
+  assert app.parse_cookies([{'value': 'foo=bar'}]) == { 'foo': ['bar'] }
+  assert app.parse_cookies([{'value': 'foo=bar; foo=bar2'}]) == {'foo': ['bar', 'bar2']}
+  assert app.parse_cookies([{'value': 'foo=bar; fuz=bar2'}]) == {'foo': ['bar'], 'fuz': ['bar2']}
+  assert app.parse_cookies([{'value': 'foo=bar; fuz=bar2'}, {'value': 'foo=bar3'}]) == {'foo': ['bar', 'bar3'], 'fuz': ['bar2']}
+
+def test_get_session():
+  assert app.get_current_session_id({
+    'headers': {
+        'cookie': [{'key': 'cookie', 'value': 'SKIADAS_RESUME_SESSION=E4KeUsUW5Gn9ofg2QAgdVw'}]
+    }
+  }) == "E4KeUsUW5Gn9ofg2QAgdVw"
 
 @pytest.fixture(scope='function')
 def aws_credentials():
@@ -111,50 +120,7 @@ def request_cf():
         ]
       },
       "method": "GET",
-      "querystring": {
-        "ID": { "value": "42" },
-        "NoValue": { "value": "" },
-        "querymv": {
-          "value": "val1",
-          "multiValue": [
-            {
-              "value": "val1"
-            },
-            {
-              "value": "val2"
-            }
-          ]
-        }
-      },
+      "querystring": "stuff",
       "uri": "/"
     }
     '''
-
-@pytest.fixture(scope="function")
-def query_string():
-  return {
-      "ID": { "value": "42" },
-      "NoValue": { "value": "" },
-      "querymv": {
-        "value": "val1",
-        "multiValue": [
-          {
-            "value": "val1"
-          },
-          {
-            "value": "val2"
-          }
-        ]
-      }
-  }
-
-# This all belongs somewhere else
-# As part of some integration tests
-  # response = get_client(True).invoke(
-  #   FunctionName="IncomingRequestFunction",
-  #   Payload=data
-  #   )
-
-  # Verify the response
-  # assert response['StatusCode'] == 200
-  # assert json.loads(response['Payload'].read()) == json.loads(data)['Records'][0]['cf']['request']

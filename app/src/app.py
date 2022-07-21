@@ -9,7 +9,7 @@ from dynamodb import dbtable
 
 PROD_BUCKET = '/skiadas/resume/counters'
 DEV_BUCKET = '/dev-skiadas/resume/counters'
-DATE_FORMAT = '%a, %d %b %Y %H:%M:%S GMT'
+DATE_FORMAT = "%a, %d %b %Y %H:%M:%S GMT"
 SESSIONID_NAME = 'SKIADAS_RESUME_SESSION'
 BUCKET_PREFIX = os.getenv('BUCKET_PREFIX', PROD_BUCKET)
 QUEUE_PARAMETER = '/request_queue_name'
@@ -30,6 +30,7 @@ def lambda_incoming_to_sqs_handler_dev(event, context):
 
 def lambda_incoming_to_sqs_handler_inner(event, context, bucketPrefix):
   request = event['Records'][0]['cf']['request']
+  print(request)
   currentSession = get_current_session_id(request)
   if currentSession is None:
     return redirect_with_new_session(request)
@@ -59,19 +60,20 @@ def retrieveQueueName(bucketPrefix):
 
 def redirect_with_new_session(request):
   return {
-    "statusCode": "302",
+    "status": "302",
     "headers": {
       'location': [{
+        'key': "Location",
         'value': 'https://' + request['headers']['host'][0]['value'] +
                               request['uri'] +
-                              encode_query_string(request['querystring'])
+                              request['querystring']
+      }],
+      'set-cookie': [{
+        "key": "Set-Cookie",
+        "value": SESSIONID_NAME + "=" +
+            generate_session_id() +
+            "; Expires=" + expire_date(2 * 60)
       }]
-    },
-    "cookies": {
-      SESSIONID_NAME: {
-        "value": generate_session_id(),
-        "attributes": "Expires=" + expire_date(2 * 60)
-      }
     }
   }
 
@@ -79,26 +81,27 @@ def generate_session_id():
   return secrets.token_urlsafe(16)
 
 def expire_date(minutesFromNow):
-  return DATE_FORMAT.format(datetime.now() + timedelta(minutes=minutesFromNow))
-
-def encode_query_string(q_obj):
-  if q_obj == "":
-    return ""
-  tuples = [(k, _get_query_values(v)) for k, v in q_obj.items()]
-  return "?" + urlencode(tuples, doseq=True)
-
-def _get_query_values(v):
-  if 'multiValue' in v:
-    return [x['value'] for x in v['multiValue']]
-  return v['value']
+  return (datetime.now() + timedelta(minutes=minutesFromNow)).strftime(DATE_FORMAT)
 
 def get_current_session_id(request):
-    if 'cookies' not in request:
-      return None
-    cookies = request['cookies']
-    if SESSIONID_NAME in cookies:
-      return cookies[SESSIONID_NAME]['value']
-    return None
+  headers = request.get('headers', {})
+  cookies = parse_cookies(headers.get('cookie', []))
+  print(cookies)
+  if SESSIONID_NAME in cookies:
+    return cookies[SESSIONID_NAME][0]
+  return None
+
+def parse_cookies(cookies_array):
+  cookies = {}
+  for row in cookies_array:
+    for part in row['value'].split('; '):
+      entry = part.split('=')
+      cookie = entry[0]
+      value = entry[1]
+      if cookie not in cookies:
+        cookies[cookie] = []
+      cookies[cookie].append(value)
+  return cookies
 
 def process_incoming_request(request, incomingQueue):
   message = json.dumps({
