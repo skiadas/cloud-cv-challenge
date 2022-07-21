@@ -116,19 +116,19 @@ Resources:
         - Key: project
           Value: resume-skiadas
 
-  # Route53RecordSetGroup:
-  #   Type: AWS::Route53::RecordSetGroup
-  #   Condition: CreateProdResources
-  #   Properties:
-  #     HostedZoneName: !Sub '${DomainName}.'
-  #     RecordSets:
-  #     - Name: !Sub '${SubDomain}.${DomainName}'
-  #       Type: 'A'
-  #       AliasTarget:
-  #         DNSName: !GetAtt CloudFrontStack.Outputs.CloudFrontDistribution
-  #         EvaluateTargetHealth: false
-  #         # The  following HosteZoneId is always used for alias records pointing to CF.
-  #         HostedZoneId: 'Z2FDTNDATAQYW2'
+  Route53RecordSetGroup:
+    Type: AWS::Route53::RecordSetGroup
+    Condition: CreateProdResources
+    Properties:
+      HostedZoneName: !Sub '${DomainName}.'
+      RecordSets:
+      - Name: !Sub '${SubDomain}.${DomainName}'
+        Type: 'A'
+        AliasTarget:
+          DNSName: !GetAtt CloudFrontStack.Outputs.CloudFrontDistribution
+          EvaluateTargetHealth: false
+          # The  following HosteZoneId is always used for alias records pointing to CF.
+          HostedZoneId: 'Z2FDTNDATAQYW2'
 
   CountersStack:
     Type: AWS::CloudFormation::Stack
