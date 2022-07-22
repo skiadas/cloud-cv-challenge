@@ -30,7 +30,6 @@ def lambda_incoming_to_sqs_handler_dev(event, context):
 
 def lambda_incoming_to_sqs_handler_inner(event, context, bucketPrefix):
   request = event['Records'][0]['cf']['request']
-  print(request)
   currentSession = get_current_session_id(request)
   if currentSession is None:
     return redirect_with_new_session(request)
@@ -86,7 +85,6 @@ def expire_date(minutesFromNow):
 def get_current_session_id(request):
   headers = request.get('headers', {})
   cookies = parse_cookies(headers.get('cookie', []))
-  print(cookies)
   if SESSIONID_NAME in cookies:
     return cookies[SESSIONID_NAME][0]
   return None
