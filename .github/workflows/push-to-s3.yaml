@@ -64,6 +64,36 @@ jobs:
           --cov=app
           --cov-report html:cov_html
           --cov-report xml:coverage.xml
+  cdk-deploy:
+    runs-on: ubuntu-latest
+    needs:
+      - check-out
+      - cf-lint
+      - app-test
+    env:
+      ROLE: ${{ secrets.AWS_ROLE }}
+      BUCKET: ${{ secrets.BUCKET_NAME }}
+      SUBDOMAIN: ${{ secrets.SUBDOMAIN }}
+      DOMAIN_NAME: ${{ secrets.DOMAIN }}
+      ZONE_ID: ${{ secrets.HOSTED_ZONE_ID}}
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v3
+      - uses: aws-actions/configure-aws-credentials@v1
+        with:
+          role-to-assume: ${{ env.ROLE }}
+          role-duration-seconds: 900
+          aws-region: us-east-1
+      - name: Install npm and cdk, run cdk
+        if: >
+          ${{github.event_name == 'workflow_dispatch'}} ||
+          ${{needs.check-out.outputs.app}} ||
+          ${{needs.check-out.outputs.cf}} ||
+          ${{needs.check-out.outputs.site}}
+        run: >
+          cd cdk
+          npm install -g aws-cdk
+          cdk deploy
   upload:
     runs-on: ubuntu-latest
     needs:
