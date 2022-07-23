@@ -74,8 +74,9 @@ jobs:
           ${{needs.check-out.outputs.cf}} ||
           ${{needs.check-out.outputs.site}}
         run: >
-          cd cdk
-          npm install -g aws-cdk
+          cd cdk &&
+          npm install -g aws-cdk &&
+          npm update &&
           cdk deploy
   upload:
     runs-on: ubuntu-latest
