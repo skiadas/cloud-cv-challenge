@@ -52,7 +52,6 @@ jobs:
     runs-on: ubuntu-latest
     needs:
       - check-out
-      - cf-lint
       - app-test
     env:
       ROLE: ${{ secrets.AWS_ROLE }}
@@ -82,7 +81,6 @@ jobs:
     runs-on: ubuntu-latest
     needs:
       - check-out
-      - cf-lint
       - app-test
     if: ${{ false }}
     env:
