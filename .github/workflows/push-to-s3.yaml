@@ -70,12 +70,7 @@ jobs:
       - check-out
       - cf-lint
       - app-test
-    if: >
-      ${{ !failure() && !cancelled() &&
-      (github.event_name == 'workflow_dispatch' ||
-      needs.check-out.outputs.app ||
-      needs.check-out.outputs.site ||
-      needs.check-out.outputs.cf)}}
+    if: ${{ false }}
     env:
       ROLE: ${{ secrets.AWS_ROLE }}
       BUCKET: ${{ secrets.BUCKET_NAME }}

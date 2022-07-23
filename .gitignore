@@ -4,5 +4,4 @@ __pycache__
 coverage.xml
 .coverage
 
-packaged-dev.template
-packaged.template
+packaged*.template
