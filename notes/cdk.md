@@ -17,3 +17,5 @@ Constructs come in three variations:
 [API reference](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-construct-library.html)
 
 The [AWS Toolkit for VS Code](https://aws.amazon.com/visualstudiocode/) will prove quite handy I think.
+
+[Assertion library](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.assertions-readme.html)
