@@ -35,4 +35,15 @@ After going through the workshop, I am ready to move my templates over to CDK. I
 3. I will create a minimal app in CDK, then make a new workflow to deploy it.
 4. Once that is working, I will then gradually create the needed CDK parts that match the elements in the existing templates. Along the way I will also move to using a single table to hold the visits.
 
+With the first three items out of the way, now I will start recreating the various parts. Roughly I will need the following:
 
+- An S3 bucket to host the site.
+- A cloudfront distribution to serve from that bucket.
+- An S3 bucket for the distribution's logs.
+- Binding that distribution to my domain, which would involve a certificate at least.
+- A table to hold visits information
+- An API tied to that table
+- Cloudfront functions to add and maintain a session. May be able to do it with one function
+- Code on my html page that triggers the visits, or else some process based on the cloudwatch logs, to monitor when a new visit happens
+
+I will start by looking at [S3 bucket CDK creation](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_s3-readme.html) docs. 
