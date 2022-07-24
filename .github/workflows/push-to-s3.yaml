@@ -75,7 +75,7 @@ jobs:
           ${{needs.check-out.outputs.site}}
         run: >
           cd cdk &&
-          npm install -g aws-cdk &&
+          npm install --location=global aws-cdk &&
           npm update &&
           cdk deploy
   upload:
