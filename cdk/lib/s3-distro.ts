@@ -36,7 +36,7 @@ export class S3BackedDistro extends Construct {
 
     this.bucket = deployment.deployedBucket;
 
-    if ("hosting" in props) {
+    if (! ("hosting" in props)) {
       this.distribution = new Distribution(this, "cloudfrontDistro", {
         defaultBehavior: { origin: new S3Origin(staticPages) },
       });
