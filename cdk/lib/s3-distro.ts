@@ -4,7 +4,7 @@
 import { Duration, RemovalPolicy } from "aws-cdk-lib";
 import { DnsValidatedCertificate } from "aws-cdk-lib/aws-certificatemanager";
 import { Distribution, DistributionProps, IDistribution,
-          IResponseHeadersPolicy, ResponseHeadersPolicy, HeadersFrameOption, HeadersReferrerPolicy
+          IResponseHeadersPolicy, ResponseHeadersPolicy, HeadersFrameOption, HeadersReferrerPolicy, ViewerProtocolPolicy
           } from "aws-cdk-lib/aws-cloudfront";
 import { S3Origin } from "aws-cdk-lib/aws-cloudfront-origins";
 import { ARecord, HostedZone, RecordTarget } from "aws-cdk-lib/aws-route53";
@@ -40,11 +40,11 @@ export class S3BackedDistro extends Construct {
     const distrProps : DistributionProps = {
       defaultBehavior: {
         origin: new S3Origin(staticPages),
-        responseHeadersPolicy: headersPolicy(this)
+        responseHeadersPolicy: headersPolicy(this),
+        viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
       },
       logBucket: logBucket,
       errorResponses: [ errorPage(403), errorPage(404) ],
-
     };
 
     if (! ("hosting" in props)) {
