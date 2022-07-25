@@ -1,10 +1,12 @@
-import { Stack, StackProps, Tags, RemovalPolicy } from 'aws-cdk-lib';
-import { Distribution, IDistribution } from 'aws-cdk-lib/aws-cloudfront';
-import { S3Origin } from 'aws-cdk-lib/aws-cloudfront-origins';
-import { Bucket, BlockPublicAccess, IBucket } from 'aws-cdk-lib/aws-s3';
-import { BucketDeployment, Source } from 'aws-cdk-lib/aws-s3-deployment';
+import { Stack, StackProps, Tags } from 'aws-cdk-lib';
+import { IDistribution } from 'aws-cdk-lib/aws-cloudfront';
+import { IBucket } from 'aws-cdk-lib/aws-s3';
+import { Source } from 'aws-cdk-lib/aws-s3-deployment';
 import { Construct } from 'constructs';
+
 import * as path from 'path';
+
+import { S3BackedDistro } from './s3-distro';
 
 // Stack that sets up the cloudfront distribution and related items
 export class DistroStack extends Stack {
@@ -15,24 +17,15 @@ export class DistroStack extends Stack {
     super(scope, id, props);
     Tags.of(this).add("project", "skiadas-resume");
 
-    const staticPages = new Bucket(this, "staticPagesBucket", {
-      blockPublicAccess: BlockPublicAccess.BLOCK_ALL,
-      removalPolicy: RemovalPolicy.DESTROY,
-      autoDeleteObjects: true,
-    });
-    // Used to upload the files
-    const deployment = new BucketDeployment(this, 'filesDeployment', {
-      sources: [Source.asset(path.join(__dirname, '../../site'))],
-      destinationBucket: staticPages
+    const s3distro = new S3BackedDistro(this, "s3-plus-distro", {
+      source: Source.asset(path.join(__dirname, "../../site")),
+      hosting: {
+        subdomain: 'resume',
+        domain: 'harisskiadas.com'
+      }
     });
 
-    this.bucket = deployment.deployedBucket;
-
-    const distribution = new Distribution(this, 'cloudfrontDistro', {
-      defaultBehavior: { origin: new S3Origin(staticPages) }
-    });
-
-    this.distribution = distribution;
-
+    this.bucket = s3distro.bucket;
+    this.distribution = s3distro.distribution;
   }
 }
