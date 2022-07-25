@@ -3,8 +3,9 @@
 // Optional customization for domain
 import { Duration, RemovalPolicy } from "aws-cdk-lib";
 import { DnsValidatedCertificate } from "aws-cdk-lib/aws-certificatemanager";
+import { aws_cloudfront as cf } from "aws-cdk-lib";
 import { Distribution, DistributionProps, IDistribution,
-          IResponseHeadersPolicy, ResponseHeadersPolicy, HeadersFrameOption, HeadersReferrerPolicy, ViewerProtocolPolicy
+          IResponseHeadersPolicy, ResponseHeadersPolicy, HeadersFrameOption, HeadersReferrerPolicy, ViewerProtocolPolicy, FunctionEventType
           } from "aws-cdk-lib/aws-cloudfront";
 import { S3Origin } from "aws-cdk-lib/aws-cloudfront-origins";
 import { ARecord, HostedZone, RecordTarget } from "aws-cdk-lib/aws-route53";
@@ -12,6 +13,8 @@ import { CloudFrontTarget } from "aws-cdk-lib/aws-route53-targets";
 import { Bucket, BlockPublicAccess, IBucket } from "aws-cdk-lib/aws-s3";
 import { BucketDeployment, ISource, Source } from "aws-cdk-lib/aws-s3-deployment";
 import { Construct } from "constructs";
+
+import * as path from "path";
 
 export interface S3BackedDistroProps {
   source: ISource,
@@ -42,6 +45,14 @@ export class S3BackedDistro extends Construct {
         origin: new S3Origin(staticPages),
         responseHeadersPolicy: headersPolicy(this),
         viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+        functionAssociations: [{
+          eventType: FunctionEventType.VIEWER_REQUEST,
+          function: new cf.Function(this, 'redirectForSession', {
+            code: cf.FunctionCode.fromFile({
+              filePath: path.join(__dirname, '../cf_functions/redirectForSession.js')
+            })
+          }),
+        }]
       },
       logBucket: logBucket,
       errorResponses: [ errorPage(403), errorPage(404) ],
