@@ -3,7 +3,7 @@
 // Optional customization for domain
 import { RemovalPolicy } from "aws-cdk-lib";
 import { DnsValidatedCertificate } from "aws-cdk-lib/aws-certificatemanager";
-import { Distribution, IDistribution } from "aws-cdk-lib/aws-cloudfront";
+import { Distribution, DistributionProps, IDistribution } from "aws-cdk-lib/aws-cloudfront";
 import { S3Origin } from "aws-cdk-lib/aws-cloudfront-origins";
 import { ARecord, HostedZone, RecordTarget } from "aws-cdk-lib/aws-route53";
 import { CloudFrontTarget } from "aws-cdk-lib/aws-route53-targets";
@@ -23,11 +23,8 @@ export class S3BackedDistro extends Construct {
   constructor(scope: Construct, id: string, props: S3BackedDistroProps) {
     super(scope, id);
 
-    const staticPages = new Bucket(this, "staticPagesBucket", {
-      blockPublicAccess: BlockPublicAccess.BLOCK_ALL,
-      removalPolicy: RemovalPolicy.DESTROY,
-      autoDeleteObjects: true,
-    });
+    const staticPages = makePrivateRemovableBucket(this, "staticPagesBucket");
+    const logBucket = makePrivateRemovableBucket(this, "cloudfrontLogsBucket");
     // Used to upload the files
     const deployment = new BucketDeployment(this, "filesDeployment", {
       sources: [props.source],
@@ -36,10 +33,15 @@ export class S3BackedDistro extends Construct {
 
     this.bucket = deployment.deployedBucket;
 
+
+    // General distrProps that apply to both domain and non-domain
+    const distrProps : DistributionProps = {
+      defaultBehavior: { origin: new S3Origin(staticPages) },
+      logBucket: logBucket
+    };
+
     if (! ("hosting" in props)) {
-      this.distribution = new Distribution(this, "cloudfrontDistro", {
-        defaultBehavior: { origin: new S3Origin(staticPages) },
-      });
+      this.distribution = new Distribution(this, "cloudfrontDistro", distrProps);
       return;
     }
     // Customization below revolves around having a domain. We need:
@@ -62,9 +64,9 @@ export class S3BackedDistro extends Construct {
     });
 
     const distribution = new Distribution(this, "cloudfrontDistro", {
-      defaultBehavior: { origin: new S3Origin(staticPages) },
-      domainNames: [fullDomainName],
+      ...distrProps,
       certificate: cert,
+      domainNames: [fullDomainName],
     });
 
     this.distribution = distribution;
@@ -75,4 +77,13 @@ export class S3BackedDistro extends Construct {
       target: RecordTarget.fromAlias(new CloudFrontTarget(distribution)),
     });
   }
+}
+
+
+function makePrivateRemovableBucket(scope: Construct, bucketName: string) {
+  return new Bucket(scope, bucketName, {
+      blockPublicAccess: BlockPublicAccess.BLOCK_ALL,
+      removalPolicy: RemovalPolicy.DESTROY,
+      autoDeleteObjects: true,
+    });
 }
