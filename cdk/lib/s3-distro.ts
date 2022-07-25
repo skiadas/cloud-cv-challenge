@@ -1,7 +1,7 @@
 // Distribution backed by S3 bucket
 // Populates bucket contents based on provided source
 // Optional customization for domain
-import { RemovalPolicy } from "aws-cdk-lib";
+import { Duration, RemovalPolicy } from "aws-cdk-lib";
 import { DnsValidatedCertificate } from "aws-cdk-lib/aws-certificatemanager";
 import { Distribution, DistributionProps, IDistribution } from "aws-cdk-lib/aws-cloudfront";
 import { S3Origin } from "aws-cdk-lib/aws-cloudfront-origins";
@@ -37,7 +37,8 @@ export class S3BackedDistro extends Construct {
     // General distrProps that apply to both domain and non-domain
     const distrProps : DistributionProps = {
       defaultBehavior: { origin: new S3Origin(staticPages) },
-      logBucket: logBucket
+      logBucket: logBucket,
+      errorResponses: [ errorPage(403), errorPage(404) ]
     };
 
     if (! ("hosting" in props)) {
@@ -79,6 +80,15 @@ export class S3BackedDistro extends Construct {
   }
 }
 
+
+function errorPage(code: number) {
+  return {
+    httpStatus: code,
+    responseHttpStatus: code,
+    responsePagePath: `/${code}.html`,
+    ttl: Duration.minutes(60)
+  };
+}
 
 function makePrivateRemovableBucket(scope: Construct, bucketName: string) {
   return new Bucket(scope, bucketName, {
