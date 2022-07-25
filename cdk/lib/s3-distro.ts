@@ -3,7 +3,9 @@
 // Optional customization for domain
 import { Duration, RemovalPolicy } from "aws-cdk-lib";
 import { DnsValidatedCertificate } from "aws-cdk-lib/aws-certificatemanager";
-import { Distribution, DistributionProps, IDistribution } from "aws-cdk-lib/aws-cloudfront";
+import { Distribution, DistributionProps, IDistribution,
+          IResponseHeadersPolicy, ResponseHeadersPolicy, HeadersFrameOption, HeadersReferrerPolicy
+          } from "aws-cdk-lib/aws-cloudfront";
 import { S3Origin } from "aws-cdk-lib/aws-cloudfront-origins";
 import { ARecord, HostedZone, RecordTarget } from "aws-cdk-lib/aws-route53";
 import { CloudFrontTarget } from "aws-cdk-lib/aws-route53-targets";
@@ -36,9 +38,13 @@ export class S3BackedDistro extends Construct {
 
     // General distrProps that apply to both domain and non-domain
     const distrProps : DistributionProps = {
-      defaultBehavior: { origin: new S3Origin(staticPages) },
+      defaultBehavior: {
+        origin: new S3Origin(staticPages),
+        responseHeadersPolicy: headersPolicy(this)
+      },
       logBucket: logBucket,
-      errorResponses: [ errorPage(403), errorPage(404) ]
+      errorResponses: [ errorPage(403), errorPage(404) ],
+
     };
 
     if (! ("hosting" in props)) {
@@ -97,3 +103,34 @@ function makePrivateRemovableBucket(scope: Construct, bucketName: string) {
       autoDeleteObjects: true,
     });
 }
+function headersPolicy(scope: Construct): IResponseHeadersPolicy {
+  return new ResponseHeadersPolicy(scope, 'headersPolicy', {
+    securityHeadersBehavior: {
+      contentSecurityPolicy: {
+        contentSecurityPolicy: "default-src 'none'; img-src 'self'; script-src 'self'; style-src 'self'; object-src 'none'",
+        override: true
+      },
+      contentTypeOptions: { override: true },
+      frameOptions: {
+        frameOption: HeadersFrameOption.SAMEORIGIN,
+        override: true
+      },
+      referrerPolicy: {
+        referrerPolicy: HeadersReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN,
+        override: true
+      },
+      strictTransportSecurity: {
+        accessControlMaxAge: Duration.minutes(10),
+        includeSubdomains: true,
+        override: true,
+        preload: true
+      },
+      xssProtection: {
+        protection: true,
+        override: true,
+        modeBlock: true
+      }
+    }
+  });
+}
+
