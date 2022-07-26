@@ -21,7 +21,9 @@ function handler(event) {
   } else if (eventType == 'viewer-response') {
     var response = event.response;
     var sessionCookie = request.cookies[SESSION_COOKIE_NAME];
-    response.cookies[SESSION_COOKIE_NAME] = makeCookie(sessionCookie.value);
+    if (!('cookies' in response)) response.cookies = {};
+    response.cookies[SESSION_COOKIE_NAME] =
+      makeCookie(sessionCookie.value)[SESSION_COOKIE_NAME];
     return response;
   } else {
     console.log('Unknown event type: ' + eventType);
