@@ -38,24 +38,31 @@ export class S3BackedDistro extends Construct {
 
     this.bucket = deployment.deployedBucket;
 
+    const cfFunction = new cf.Function(this, "redirectForSession", {
+      code: cf.FunctionCode.fromFile({
+        filePath: path.join(__dirname, "../cf_functions/redirectForSession.js"),
+      }),
+    });
 
     // General distrProps that apply to both domain and non-domain
-    const distrProps : DistributionProps = {
+    const distrProps: DistributionProps = {
       defaultBehavior: {
         origin: new S3Origin(staticPages),
         responseHeadersPolicy: headersPolicy(this),
         viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
-        functionAssociations: [{
-          eventType: FunctionEventType.VIEWER_REQUEST,
-          function: new cf.Function(this, 'redirectForSession', {
-            code: cf.FunctionCode.fromFile({
-              filePath: path.join(__dirname, '../cf_functions/redirectForSession.js')
-            })
-          }),
-        }]
+        functionAssociations: [
+          {
+            eventType: FunctionEventType.VIEWER_REQUEST,
+            function: cfFunction,
+          },
+          {
+            eventType: FunctionEventType.VIEWER_RESPONSE,
+            function: cfFunction,
+          }
+        ],
       },
       logBucket: logBucket,
-      errorResponses: [ errorPage(403), errorPage(404) ],
+      errorResponses: [errorPage(403), errorPage(404)],
     };
 
     if (! ("hosting" in props)) {
