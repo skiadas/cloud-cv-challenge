@@ -1,106 +1,64 @@
 // Distribution backed by S3 bucket
 // Populates bucket contents based on provided source
 // Optional customization for domain
-import { Duration, RemovalPolicy } from "aws-cdk-lib";
-import { DnsValidatedCertificate } from "aws-cdk-lib/aws-certificatemanager";
-import { aws_cloudfront as cf } from "aws-cdk-lib";
-import { Distribution, DistributionProps, IDistribution,
-          IResponseHeadersPolicy, ResponseHeadersPolicy, HeadersFrameOption, HeadersReferrerPolicy, ViewerProtocolPolicy, FunctionEventType
-          } from "aws-cdk-lib/aws-cloudfront";
-import { S3Origin } from "aws-cdk-lib/aws-cloudfront-origins";
-import { ARecord, HostedZone, RecordTarget } from "aws-cdk-lib/aws-route53";
-import { CloudFrontTarget } from "aws-cdk-lib/aws-route53-targets";
-import { Bucket, BlockPublicAccess, IBucket } from "aws-cdk-lib/aws-s3";
-import { BucketDeployment, ISource, Source } from "aws-cdk-lib/aws-s3-deployment";
+import { Duration } from "aws-cdk-lib";
+import {
+  Distribution,
+  IDistribution,
+  DistributionProps,
+  IOrigin,
+  HeadersFrameOption,
+  HeadersReferrerPolicy,
+  ResponseHeadersPolicy,
+  ViewerProtocolPolicy,
+} from "aws-cdk-lib/aws-cloudfront";
+
 import { Construct } from "constructs";
+
+import { CFFunction } from "./cf-functions";
+import { ManagedBucket } from "./managed-bucket";
+import { DistroWrapper } from "./wrappers/distro-wrapper";
 
 import * as path from "path";
 
 export interface S3BackedDistroProps {
-  source: ISource,
-  hosting?: { domain: string, subdomain: string }
+  origin: IOrigin,
+  wrappers: DistroWrapper[]
 }
 
 export class S3BackedDistro extends Construct {
-  public readonly bucket: IBucket;
   public readonly distribution: IDistribution;
 
   constructor(scope: Construct, id: string, props: S3BackedDistroProps) {
     super(scope, id);
 
-    const staticPages = makePrivateRemovableBucket(this, "staticPagesBucket");
-    const logBucket = makePrivateRemovableBucket(this, "cloudfrontLogsBucket");
-    // Used to upload the files
-    const deployment = new BucketDeployment(this, "filesDeployment", {
-      sources: [props.source],
-      destinationBucket: staticPages,
-    });
+    const logs = new ManagedBucket(this, "cloudfrontLogsBucket");
 
-    this.bucket = deployment.deployedBucket;
-
-    const cfFunction = new cf.Function(this, "redirectForSession", {
-      code: cf.FunctionCode.fromFile({
-        filePath: path.join(__dirname, "../cf_functions/redirectForSession.js"),
-      }),
-    });
+    const associations = new CFFunction(this, 'cf-function', {
+      filePath: path.join(__dirname, "../cf_functions/redirectForSession.js")
+    }).associations;
 
     // General distrProps that apply to both domain and non-domain
-    const distrProps: DistributionProps = {
+    let distrProps: DistributionProps = {
       defaultBehavior: {
-        origin: new S3Origin(staticPages),
+        origin: props.origin,
         responseHeadersPolicy: headersPolicy(this),
         viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
-        functionAssociations: [
-          {
-            eventType: FunctionEventType.VIEWER_REQUEST,
-            function: cfFunction,
-          },
-          {
-            eventType: FunctionEventType.VIEWER_RESPONSE,
-            function: cfFunction,
-          }
-        ],
+        functionAssociations: associations,
       },
-      logBucket: logBucket,
+      logBucket: logs.bucket,
       errorResponses: [errorPage(403), errorPage(404)],
     };
 
-    if (! ("hosting" in props)) {
-      this.distribution = new Distribution(this, "cloudfrontDistro", distrProps);
-      return;
+    for (const wrapper of props.wrappers) {
+      distrProps = wrapper.alterProps(distrProps);
     }
-    // Customization below revolves around having a domain. We need:
-    // 1. A hosted zone entity
-    // 2. A certificate
-    // 3. More elements in distribution constructor
-    // 4. A route 53 alias record that references the distribution
-    const hosting = props.hosting!;
-    const fullDomainName = `${hosting.subdomain}.${hosting.domain}`;
 
-    const hostedZone = HostedZone.fromLookup(this, "zone", {
-      domainName: hosting.domain,
-    });
+    this.distribution = new Distribution(this, "cloudfrontDistro", distrProps);
 
-    const cert = new DnsValidatedCertificate(this, "acmCertificate", {
-      hostedZone: hostedZone,
-      domainName: fullDomainName,
-      cleanupRoute53Records: true,
-      region: "us-east-1",
-    });
-
-    const distribution = new Distribution(this, "cloudfrontDistro", {
-      ...distrProps,
-      certificate: cert,
-      domainNames: [fullDomainName],
-    });
-
-    this.distribution = distribution;
-
-    new ARecord(this, "AliasRecord", {
-      zone: hostedZone,
-      recordName: fullDomainName,
-      target: RecordTarget.fromAlias(new CloudFrontTarget(distribution)),
-    });
+    for (const wrapper of props.wrappers) {
+      wrapper.finalizeDistro(this.distribution);
+    }
   }
 }
 
@@ -114,14 +72,7 @@ function errorPage(code: number) {
   };
 }
 
-function makePrivateRemovableBucket(scope: Construct, bucketName: string) {
-  return new Bucket(scope, bucketName, {
-      blockPublicAccess: BlockPublicAccess.BLOCK_ALL,
-      removalPolicy: RemovalPolicy.DESTROY,
-      autoDeleteObjects: true,
-    });
-}
-function headersPolicy(scope: Construct): IResponseHeadersPolicy {
+function headersPolicy(scope: Construct) {
   return new ResponseHeadersPolicy(scope, 'headersPolicy', {
     securityHeadersBehavior: {
       contentSecurityPolicy: {

@@ -5,8 +5,11 @@ import { Source } from 'aws-cdk-lib/aws-s3-deployment';
 import { Construct } from 'constructs';
 
 import * as path from 'path';
+import { DomainWrapper } from './wrappers/domain-wrapper';
 
 import { S3BackedDistro } from './s3-distro';
+import { ManagedBucket } from './managed-bucket';
+import { S3Origin } from 'aws-cdk-lib/aws-cloudfront-origins';
 
 // Stack that sets up the cloudfront distribution and related items
 export class DistroStack extends Stack {
@@ -17,15 +20,19 @@ export class DistroStack extends Stack {
     super(scope, id, props);
     Tags.of(this).add("project", "skiadas-resume");
 
+    const staticPages = new ManagedBucket(this,"staticPagesBucket").deployFrom(Source.asset(path.join(__dirname, "../../site")));
+    const origin = new S3Origin(staticPages.bucket);
     const s3distro = new S3BackedDistro(this, "s3-plus-distro", {
-      source: Source.asset(path.join(__dirname, "../../site")),
-      hosting: {
-        subdomain: 'resume',
-        domain: 'harisskiadas.com'
-      }
+      origin: origin,
+      wrappers: [
+        new DomainWrapper(this, 'resume-domain', {
+          subdomain: 'resume',
+          domain: 'harisskiadas.com'
+        })
+      ],
     });
 
-    this.bucket = s3distro.bucket;
+    this.bucket = staticPages.deployedBucket!;
     this.distribution = s3distro.distribution;
   }
 }
